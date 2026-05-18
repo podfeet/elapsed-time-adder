@@ -99,5 +99,23 @@
    <ArchiveAction
       buildConfiguration = "Release"
       revealArchiveInOrganizer = "YES">
+      <PreActions>
+         <ExecutionAction
+            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
+            <ActionContent
+               title = "Run Script"
+               scriptText = "BUILD_NUMBER=$(date +&quot;%y%m%d%H%M&quot;)&#10;cd &quot;$SRCROOT&quot;&#10;agvtool new-version -all $BUILD_NUMBER&#10;">
+               <EnvironmentBuildable>
+                  <BuildableReference
+                     BuildableIdentifier = "primary"
+                     BlueprintIdentifier = "37D9E93D2F9FD9D800A68EC9"
+                     BuildableName = "ElapsedTimeAdder.app"
+                     BlueprintName = "ElapsedTimeAdder"
+                     ReferencedContainer = "container:ElapsedTimeAdder.xcodeproj">
+                  </BuildableReference>
+               </EnvironmentBuildable>
+            </ActionContent>
+         </ExecutionAction>
+      </PreActions>
    </ArchiveAction>
 </Scheme>
