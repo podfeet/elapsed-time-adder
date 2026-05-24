@@ -64,7 +64,7 @@ When you're finished, you can export your data to a CSV suitable for opening in 
 
 Claude says 100 characters max - this is 100 characters
 
-==time,time math,elapsed time calculator,add time,subtract time,split time,workout times,time segments==
+time,time math,elapsed time calculator,add time,subtract time,split time,workout times,time segments
 
 ## Marketing and Support URLs
 
@@ -96,3 +96,35 @@ To create the subdomain timeadder.podfeet.com:
 
 **That's it** — no nginx config needed since the traffic goes straight to GitHub's servers, not your DigitalOcean droplet.
 
+
+
+## Validate build
+
+error:
+
+Invalid large app icon. The large app icon in the asset catalog in “ElapsedTimeAdder.app” can’t be transparent or contain an alpha channel. For details, visit: https://developer.apple.com/design/human-interface-guidelines/app-icons.
+
+Opened icon in Preview, unchecked alpha. then ran this command to recreate the icon sizes:
+
+
+
+```
+SRC="/Users/allison/htdocs/elapsed-time-adder/assets/ElapsedTimeAdderIcon.png"
+DEST="/Users/allison/htdocs/elapsed-time-adder/ElapsedTimeAdder/ElapsedTimeAdder/Assets.xcassets/AppIcon.appiconset"
+
+sips -z 1024 1024 "$SRC" --out "$DEST/AppIcon-1024.png"
+sips -z 16 16   "$SRC" --out "$DEST/AppIcon-16.png"
+sips -z 32 32   "$SRC" --out "$DEST/AppIcon-16@2x.png"
+sips -z 32 32   "$SRC" --out "$DEST/AppIcon-32.png"
+sips -z 64 64   "$SRC" --out "$DEST/AppIcon-32@2x.png"
+sips -z 128 128 "$SRC" --out "$DEST/AppIcon-128.png"
+sips -z 256 256 "$SRC" --out "$DEST/AppIcon-128@2x.png"
+sips -z 256 256 "$SRC" --out "$DEST/AppIcon-256.png"
+sips -z 512 512 "$SRC" --out "$DEST/AppIcon-256@2x.png"
+sips -z 512 512 "$SRC" --out "$DEST/AppIcon-512.png"
+sips -z 1024 1024 "$SRC" --out "$DEST/AppIcon-512@2x.png"
+```
+
+### Product → Archive
+
+then opens archives and can run validate

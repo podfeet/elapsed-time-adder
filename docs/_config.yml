@@ -1,5 +1,7 @@
 # Site Settings
 title: Elapsed Time Adder
+description: Add and subtract elapsed time on iOS, iPadOS, and macOS. Free app by Allison Sheridan.
+url: https://timeadder.podfeet.com
 
 # Build Settings
 plugins:
