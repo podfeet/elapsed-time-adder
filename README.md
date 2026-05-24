@@ -1,1 +1,1 @@
-# time-adder-claude
+# elapsed-time-adder
