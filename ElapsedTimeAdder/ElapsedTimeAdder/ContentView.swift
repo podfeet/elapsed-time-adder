@@ -206,8 +206,7 @@ struct ContentView: View {
         HStack(spacing: 8) {
             ShareLink(
                 item: CSVFile(content: csvString(rows: rows, total: total)),
-                subject: Text("Elapsed Time Export"),
-                message: Text("Elapsed time data")
+                preview: SharePreview("Elapsed Times.csv")
             ) {
                 Text("Export CSV")
                     .foregroundStyle(.primary)
@@ -219,8 +218,7 @@ struct ContentView: View {
 
             ShareLink(
                 item: TextFile(content: hhmmssString(rows: rows, total: total)),
-                subject: Text("Elapsed Time Export"),
-                message: Text("Elapsed time data")
+                preview: SharePreview("Elapsed Times.txt")
             ) {
                 Text("Export HH:MM:SS")
                     .foregroundStyle(.primary)
@@ -237,8 +235,7 @@ struct ContentView: View {
         VStack(spacing: 16) {
             ShareLink(
                 item: CSVFile(content: csvString(rows: rows, total: total)),
-                subject: Text("Elapsed Time Export"),
-                message: Text("Elapsed time data")
+                preview: SharePreview("Elapsed Times.csv")
             ) {
                 Text("Export CSV")
                     .foregroundStyle(.primary)
@@ -251,8 +248,7 @@ struct ContentView: View {
 
             ShareLink(
                 item: TextFile(content: hhmmssString(rows: rows, total: total)),
-                subject: Text("Elapsed Time Export"),
-                message: Text("Elapsed time data")
+                preview: SharePreview("Elapsed Times.txt")
             ) {
                 Text("Export HH:MM:SS")
                     .foregroundStyle(.primary)
