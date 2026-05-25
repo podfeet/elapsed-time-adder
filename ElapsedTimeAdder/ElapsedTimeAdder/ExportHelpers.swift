@@ -5,34 +5,28 @@
 //  Formats rows + total for CSV and HH:MM:SS export via share sheet.
 
 import Foundation
-import UniformTypeIdentifiers
-import CoreTransferable
 
-// MARK: - Transferable wrappers
+// MARK: - Export URLs
 
-/// A CSV document that conforms to `Transferable` so that `ShareLink` produces
-/// a single file with a `.csv` extension instead of a plain-text blob.
-struct CSVFile: Transferable {
-    let content: String
-
-    static var transferRepresentation: some TransferRepresentation {
-        DataRepresentation(exportedContentType: .commaSeparatedText) { file in
-            Data(file.content.utf8)
-        }
-    }
+/// Writes the CSV content to a temporary file named "Elapsed Time Adder Export.csv"
+/// and returns its file URL.  `ShareLink(item: url)` transfers a file URL as an
+/// actual file via AirDrop, preserving the filename exactly.
+func csvExportURL(rows: [TimeRow], total: TimeResult) -> URL {
+    let url = FileManager.default.temporaryDirectory
+        .appendingPathComponent("Elapsed Time Adder Export.csv")
+    try? csvString(rows: rows, total: total)
+        .write(to: url, atomically: true, encoding: .utf8)
+    return url
 }
 
-/// A plain-text document that conforms to `Transferable` so that `ShareLink`
-/// treats the content as a `.txt` file rather than sniffing it for URLs.
-/// (Without this, macOS sees "Row:" as a URL scheme and shows an error.)
-struct TextFile: Transferable {
-    let content: String
-
-    static var transferRepresentation: some TransferRepresentation {
-        DataRepresentation(exportedContentType: .plainText) { file in
-            Data(file.content.utf8)
-        }
-    }
+/// Writes the HH:MM:SS content to a temporary file named
+/// "Elapsed Time Adder Export.txt" and returns its file URL.
+func hhmmssExportURL(rows: [TimeRow], total: TimeResult) -> URL {
+    let url = FileManager.default.temporaryDirectory
+        .appendingPathComponent("Elapsed Time Adder Export.txt")
+    try? hhmmssString(rows: rows, total: total)
+        .write(to: url, atomically: true, encoding: .utf8)
+    return url
 }
 
 // MARK: - CSV

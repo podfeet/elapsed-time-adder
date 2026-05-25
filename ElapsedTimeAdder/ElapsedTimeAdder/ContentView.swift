@@ -205,8 +205,8 @@ struct ContentView: View {
     private var exportButtons: some View {
         HStack(spacing: 8) {
             ShareLink(
-                item: CSVFile(content: csvString(rows: rows, total: total)),
-                preview: SharePreview("Elapsed Times.csv")
+                item: csvExportURL(rows: rows, total: total),
+                preview: SharePreview("Elapsed Time Adder Export.csv")
             ) {
                 Text("Export CSV")
                     .foregroundStyle(.primary)
@@ -217,8 +217,8 @@ struct ContentView: View {
             .buttonStyle(.plain)
 
             ShareLink(
-                item: TextFile(content: hhmmssString(rows: rows, total: total)),
-                preview: SharePreview("Elapsed Times.txt")
+                item: hhmmssExportURL(rows: rows, total: total),
+                preview: SharePreview("Elapsed Time Adder Export.txt")
             ) {
                 Text("Export HH:MM:SS")
                     .foregroundStyle(.primary)
@@ -234,8 +234,8 @@ struct ContentView: View {
     private var sidebarExportButtons: some View {
         VStack(spacing: 16) {
             ShareLink(
-                item: CSVFile(content: csvString(rows: rows, total: total)),
-                preview: SharePreview("Elapsed Times.csv")
+                item: csvExportURL(rows: rows, total: total),
+                preview: SharePreview("Elapsed Time Adder Export.csv")
             ) {
                 Text("Export CSV")
                     .foregroundStyle(.primary)
@@ -247,8 +247,8 @@ struct ContentView: View {
             .buttonStyle(.plain)
 
             ShareLink(
-                item: TextFile(content: hhmmssString(rows: rows, total: total)),
-                preview: SharePreview("Elapsed Times.txt")
+                item: hhmmssExportURL(rows: rows, total: total),
+                preview: SharePreview("Elapsed Time Adder Export.txt")
             ) {
                 Text("Export HH:MM:SS")
                     .foregroundStyle(.primary)
