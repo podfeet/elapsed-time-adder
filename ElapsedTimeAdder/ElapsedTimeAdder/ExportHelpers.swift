@@ -52,11 +52,12 @@ func hhmmssExportURL(rows: [TimeRow], total: TimeResult) -> URL {
 /// - Returns: A newline-separated CSV string ready to pass to a `ShareLink`.
 func csvString(rows: [TimeRow], total: TimeResult) -> String {
     var lines = ["Title,Hours,Minutes,Seconds"]
-    for row in rows {
+    for (index, row) in rows.enumerated() {
+        let label = row.title.isEmpty ? "Row \(index + 1)" : row.title
         let h = zeroIfBlank(row.hours)
         let m = zeroIfBlank(row.minutes)
         let s = zeroIfBlank(row.seconds)
-        lines.append("\(row.title),\(rawNum(h)),\(rawNum(m)),\(rawNum(s))")
+        lines.append("\(label),\(rawNum(h)),\(rawNum(m)),\(rawNum(s))")
     }
     lines.append("Total,\(rawNum(total.hours)),\(rawNum(total.minutes)),\(rawNum(total.seconds))")
     return lines.joined(separator: "\n")
@@ -84,11 +85,11 @@ func csvString(rows: [TimeRow], total: TimeResult) -> String {
 /// - Returns: A newline-separated string ready to pass to a `ShareLink`.
 func hhmmssString(rows: [TimeRow], total: TimeResult) -> String {
     var lines: [String] = []
-    for row in rows {
+    for (index, row) in rows.enumerated() {
         let h = zeroIfBlank(row.hours)
         let m = zeroIfBlank(row.minutes)
         let s = zeroIfBlank(row.seconds)
-        let label = row.title.isEmpty ? "Row" : row.title
+        let label = row.title.isEmpty ? "Row \(index + 1)" : row.title
         lines.append("\(label): \(formatHMS(h: h, m: m, s: s, negative: false))")
     }
     let negative = total.hours < 0 || total.minutes < 0 || total.seconds < 0
