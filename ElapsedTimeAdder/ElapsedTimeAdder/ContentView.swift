@@ -204,9 +204,9 @@ struct ContentView: View {
 
     private var exportButtons: some View {
         HStack(spacing: 8) {
-            ShareLink(
-                item: csvExportURL(rows: rows, total: total),
-                preview: SharePreview("Elapsed Time Adder Export.csv")
+            ExportButton(
+                getText: { csvString(rows: rows, total: total) },
+                getFileURL: { csvExportURL(rows: rows, total: total) }
             ) {
                 Text("Export CSV")
                     .foregroundStyle(.primary)
@@ -216,9 +216,9 @@ struct ContentView: View {
             }
             .buttonStyle(.plain)
 
-            ShareLink(
-                item: hhmmssExportURL(rows: rows, total: total),
-                preview: SharePreview("Elapsed Time Adder Export.txt")
+            ExportButton(
+                getText: { hhmmssString(rows: rows, total: total) },
+                getFileURL: { hhmmssExportURL(rows: rows, total: total) }
             ) {
                 Text("Export HH:MM:SS")
                     .foregroundStyle(.primary)
@@ -233,9 +233,9 @@ struct ContentView: View {
     // Sidebar variant: stacked vertically, both buttons sized to the widest one, centered
     private var sidebarExportButtons: some View {
         VStack(spacing: 16) {
-            ShareLink(
-                item: csvExportURL(rows: rows, total: total),
-                preview: SharePreview("Elapsed Time Adder Export.csv")
+            ExportButton(
+                getText: { csvString(rows: rows, total: total) },
+                getFileURL: { csvExportURL(rows: rows, total: total) }
             ) {
                 Text("Export CSV")
                     .foregroundStyle(.primary)
@@ -246,9 +246,9 @@ struct ContentView: View {
             }
             .buttonStyle(.plain)
 
-            ShareLink(
-                item: hhmmssExportURL(rows: rows, total: total),
-                preview: SharePreview("Elapsed Time Adder Export.txt")
+            ExportButton(
+                getText: { hhmmssString(rows: rows, total: total) },
+                getFileURL: { hhmmssExportURL(rows: rows, total: total) }
             ) {
                 Text("Export HH:MM:SS")
                     .foregroundStyle(.primary)
@@ -355,6 +355,56 @@ struct ContentView: View {
         return String(format: "%.2f", value)
     }
 }
+
+// MARK: - ExportButton
+
+/// On iOS: presents `UIActivityViewController` so AirDrop / Save to Files receive
+/// a properly named file while Mail, Notes, Messages, etc. receive plain text inline.
+/// On macOS: falls back to `ShareLink` with the file URL (macOS share sheet handles
+/// both destinations appropriately via standard file sharing).
+private struct ExportButton<Label: View>: View {
+    let getText: () -> String
+    let getFileURL: () -> URL
+    @ViewBuilder let label: () -> Label
+
+#if os(iOS)
+    @State private var isPresented = false
+
+    var body: some View {
+        Button(action: { isPresented = true }) { label() }
+            .sheet(isPresented: $isPresented) {
+                ExportShareSheet(
+                    activityItem: ExportActivityItem(
+                        text: getText(),
+                        fileURL: getFileURL()
+                    )
+                )
+                .presentationDetents([.medium, .large])
+            }
+    }
+#else
+    var body: some View {
+        let url = getFileURL()
+        ShareLink(item: url, preview: SharePreview(url.lastPathComponent)) {
+            label()
+        }
+    }
+#endif
+}
+
+#if os(iOS)
+private struct ExportShareSheet: UIViewControllerRepresentable {
+    let activityItem: ExportActivityItem
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: [activityItem], applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+#endif
+
+// MARK: - List row helper
 
 private extension View {
     func plainRow(top: CGFloat = 6, bottom: CGFloat = 6) -> some View {
