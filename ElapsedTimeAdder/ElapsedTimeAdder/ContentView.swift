@@ -205,7 +205,7 @@ struct ContentView: View {
     private var exportButtons: some View {
         HStack(spacing: 8) {
             ShareLink(
-                item: csvString(rows: rows, total: total),
+                item: CSVFile(content: csvString(rows: rows, total: total)),
                 subject: Text("Elapsed Time Export"),
                 message: Text("Elapsed time data")
             ) {
@@ -218,7 +218,7 @@ struct ContentView: View {
             .buttonStyle(.plain)
 
             ShareLink(
-                item: hhmmssString(rows: rows, total: total),
+                item: TextFile(content: hhmmssString(rows: rows, total: total)),
                 subject: Text("Elapsed Time Export"),
                 message: Text("Elapsed time data")
             ) {
@@ -236,7 +236,7 @@ struct ContentView: View {
     private var sidebarExportButtons: some View {
         VStack(spacing: 16) {
             ShareLink(
-                item: csvString(rows: rows, total: total),
+                item: CSVFile(content: csvString(rows: rows, total: total)),
                 subject: Text("Elapsed Time Export"),
                 message: Text("Elapsed time data")
             ) {
@@ -250,7 +250,7 @@ struct ContentView: View {
             .buttonStyle(.plain)
 
             ShareLink(
-                item: hhmmssString(rows: rows, total: total),
+                item: TextFile(content: hhmmssString(rows: rows, total: total)),
                 subject: Text("Elapsed Time Export"),
                 message: Text("Elapsed time data")
             ) {
