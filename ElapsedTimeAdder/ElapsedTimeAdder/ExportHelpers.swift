@@ -101,7 +101,7 @@ func hhmmssExportURL(rows: [TimeRow], total: TimeResult) -> URL {
 /// - Returns: A newline-separated CSV string ready to pass to a `ShareLink`.
 func csvString(rows: [TimeRow], total: TimeResult) -> String {
     var lines = ["Title,Hours,Minutes,Seconds"]
-    for (index, row) in rows.enumerated() {
+    for (index, row) in rows.filter({ !isEmptyRow($0) }).enumerated() {
         let label = row.title.isEmpty ? "Row \(index + 1)" : row.title
         let h = zeroIfBlank(row.hours)
         let m = zeroIfBlank(row.minutes)
@@ -134,7 +134,7 @@ func csvString(rows: [TimeRow], total: TimeResult) -> String {
 /// - Returns: A newline-separated string ready to pass to a `ShareLink`.
 func hhmmssString(rows: [TimeRow], total: TimeResult) -> String {
     var lines = ["Title HH:MM:SS"]
-    for (index, row) in rows.enumerated() {
+    for (index, row) in rows.filter({ !isEmptyRow($0) }).enumerated() {
         let h = zeroIfBlank(row.hours)
         let m = zeroIfBlank(row.minutes)
         let s = zeroIfBlank(row.seconds)
@@ -147,6 +147,15 @@ func hhmmssString(rows: [TimeRow], total: TimeResult) -> String {
 }
 
 // MARK: - Private helpers
+
+/// Returns `true` when a row has no title and all time fields are zero —
+/// meaning it contributes nothing and should be omitted from exports.
+private func isEmptyRow(_ row: TimeRow) -> Bool {
+    row.title.isEmpty
+        && zeroIfBlank(row.hours)   == 0
+        && zeroIfBlank(row.minutes) == 0
+        && zeroIfBlank(row.seconds) == 0
+}
 
 /// Formats a `Double` as a compact number string, dropping the decimal when
 /// the value is a whole number (e.g. `30.0` → `"30"`, `30.5` → `"30.5"`).
