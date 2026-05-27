@@ -184,7 +184,7 @@ struct ContentView: View {
                 Label(showSpreadsheetNote ? "Hide" : "Why not use a spreadsheet?",
                       systemImage: "tablecells")
                     .foregroundStyle(.primary)
-                    .font(.footnote)
+                    .font(.body)
             }
             .buttonStyle(.plain)
             .frame(maxWidth: .infinity, alignment: .center)
@@ -326,9 +326,13 @@ struct ContentView: View {
                 Image("PodfeetLogo")
                     .resizable()
                     .scaledToFit()
+#if os(macOS)
+                    .frame(height: 44)
+#else
                     .frame(height: 28)
+#endif
                 Text("A Podfeet App · About & Feedback")
-                    .font(.subheadline)
+                    .font(.body)
                     .foregroundStyle(.primary)
             }
             .frame(maxWidth: .infinity, alignment: .center)
