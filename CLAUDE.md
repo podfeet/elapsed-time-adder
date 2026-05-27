@@ -1,4 +1,4 @@
-# Elapsed Time Calculator — Claude Context
+# Elapsed Time Adder — Claude Context
 
 ## Proactive memory
 Update this file at the end of every session or whenever a meaningful decision is made, so context is preserved across machines and sessions.
@@ -6,7 +6,7 @@ Update this file at the end of every session or whenever a meaningful decision i
 ---
 
 ## Project goal
-Build a native iOS + macOS app called **Elapsed Time Calculator** using SwiftUI (single multiplatform Xcode project). The owner (Allison) has no prior Swift experience — Claude Code is writing the Swift. 
+Build a native iOS + macOS app called **Elapsed Time Adder** using SwiftUI (single multiplatform Xcode project). The owner (Allison) has no prior Swift experience — Claude Code is writing the Swift. 
 
 The original web app (HTML/CSS/JS/jQuery/Bootstrap) lives in `web/` for reference. Do not modify it.
 
@@ -35,7 +35,7 @@ The original web app (HTML/CSS/JS/jQuery/Bootstrap) lives in `web/` for referenc
 - All tests passing (unit + UI/accessibility) when run on an **iPhone simulator** destination
 - Project renamed from `ElapsedTimeAdder` → `ElapsedTimeAdder` (folder, scheme, targets)
 - Wide (iPad/Mac) layout uses `NavigationSplitView` — fixes blank white left column that appeared with `NavigationStack` + `WindowGroup`
-- Home screen display name is **"Time Adder"** (set via `INFOPLIST_KEY_CFBundleDisplayName` in `project.pbxproj`); App Store name set separately in App Store Connect as "Elapsed Time Calculator"
+- **In-app name is always "Elapsed Time Adder"** — never "Calculator." Home screen display name is **"Time Adder"** (set via `INFOPLIST_KEY_CFBundleDisplayName` in `project.pbxproj`); App Store Connect listing name is set separately there as "Elapsed Time Calculator" (that is the only place "Calculator" is acceptable)
 - DocC documentation added for non-UI code (`TimeMath.swift`, `ExportHelpers.swift`, `TimeRow.swift`) — catalog at `ElapsedTimeAdder.docc/`. Build with **Product → Build Documentation** in Xcode.
 - App icon updated — source at `assets/ElapsedTimeAdderIcon.png` (1024×1024); all required sizes generated via `sips` into `Assets.xcassets/AppIcon.appiconset/`
 
@@ -138,3 +138,4 @@ Four changes made to improve discoverability for new users:
 - **Free Apple Developer account certificates expire every 7 days** — when this happens, go to Xcode → Settings → Accounts → Manage Certificates, delete the expired certificate, create a new Apple Development one, then clean build (Cmd+Shift+K) and rebuild. Paid account ($99/year) required for TestFlight and App Store.
 - **Icon sizes**: `@2x` variants must be double the logical pixel size (e.g. `512@2x` = 1024px, `256@2x` = 512px, `128@2x` = 256px). Use `sips -z <h> <w> source --out dest` to generate. Source file lives at `assets/ElapsedTimeAdderIcon.png`.
 - **WCAG AA contrast**: `.secondary` foreground color (~2.85:1 on white) fails AA; `.blue` text on `.blue.opacity(0.12)` background (~2.5:1) also fails. Use `.primary` text with tinted backgrounds for color coding instead.
+- **TestFlight external distribution**: when archiving in Xcode, choose **App Store** (not TestFlight) in the Distribute flow. Choosing TestFlight-only skips Beta App Review, which means external tester groups can never be added to the build — it stays internal-only forever.
