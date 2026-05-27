@@ -10,6 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @State private var rows: [TimeRow] = [TimeRow(), TimeRow()]
     @State private var showSpreadsheetNote = false
+    @State private var showAboutSheet = false
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private var isWide: Bool { horizontalSizeClass == .regular }
@@ -320,20 +321,26 @@ struct ContentView: View {
     }
 
     private var podfeetBranding: some View {
-        HStack(spacing: 8) {
-            Image("PodfeetLogo")
-                .resizable()
-                .scaledToFit()
-                .frame(height: 28)
-            Text("A Podfeet App")
-                .font(.subheadline)
-                .foregroundStyle(.primary)
+        Button { showAboutSheet = true } label: {
+            HStack(spacing: 8) {
+                Image("PodfeetLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 28)
+                Text("A Podfeet App · About & Feedback")
+                    .font(.subheadline)
+                    .foregroundStyle(.primary)
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.top, 4)
+            .padding(.bottom, 8)
         }
-        .frame(maxWidth: .infinity, alignment: .center)
-        .padding(.top, 4)
-        .padding(.bottom, 8)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("A Podfeet App")
+        .buttonStyle(.plain)
+        .accessibilityLabel("A Podfeet App · About & Feedback")
+        .accessibilityHint("Opens information, website, and feedback links")
+        .sheet(isPresented: $showAboutSheet) {
+            AboutSheet()
+        }
     }
 
     // MARK: - Helpers
@@ -403,6 +410,85 @@ private struct ExportShareSheet: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 #endif
+
+// MARK: - About sheet
+
+private struct AboutSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    private var versionString: String {
+        let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+        let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
+        return "Version \(v) (build \(b))"
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                // Header
+                VStack(spacing: 10) {
+                    Image("PodfeetLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 64)
+                    Text("Elapsed Time Adder")
+                        .font(.title2.bold())
+                    Text("A Podfeet App")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text(versionString)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.top, 24)
+                .padding(.bottom, 24)
+
+                Divider()
+
+                // Links
+                VStack(spacing: 12) {
+                    Link(destination: URL(string: "https://timeadder.podfeet.com")!) {
+                        Label("Visit timeadder.podfeet.com", systemImage: "safari")
+                            .foregroundStyle(.primary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding()
+                            .background(Color.blue.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+                    }
+                    Link(destination: URL(string: "mailto:allison@podfeet.com?subject=Elapsed%20Time%20Adder%20Feedback")!) {
+                        Label("Send feedback or ask a question", systemImage: "envelope")
+                            .foregroundStyle(.primary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding()
+                            .background(Color.blue.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+                    }
+                    Link(destination: URL(string: "https://github.com/podfeet/elapsed-time-adder/issues/new")!) {
+                        HStack(alignment: .top, spacing: 10) {
+                            Image(systemName: "ladybug")
+                                .padding(.top, 2)
+                            Text("Of the nerd persuasion? Submit an issue on GitHub")
+                                .multilineTextAlignment(.leading)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .foregroundStyle(.primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+                        .background(Color.blue.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 20)
+
+                Spacer()
+            }
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+}
 
 // MARK: - List row helper
 
