@@ -192,7 +192,7 @@ struct ContentView: View {
             .accessibilityIdentifier("spreadsheetButton")
 
             if showSpreadsheetNote {
-                Text("Why not just use Excel, Numbers, or Google Sheets? Because they don't do *elapsed* time — they do absolute time. Add 22:00 + 5:00 in a spreadsheet and you'll get 3:00 AM, not 27:00.")
+                Text("Why not just use Excel, Numbers, or Google Sheets? Because spreadsheets assume time is time-of-day. Because of that, they can't calculate elapsed time. Try adding 22:00 + 5:00 in a spreadsheet, and you'll get 3:00 AM, not 27:00.")
                     .font(.callout)
                     .foregroundStyle(.primary)
                     .padding()
