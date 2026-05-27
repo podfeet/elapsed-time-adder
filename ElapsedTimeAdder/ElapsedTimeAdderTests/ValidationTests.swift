@@ -19,8 +19,8 @@ final class ValidationTests: XCTestCase {
         XCTAssertTrue(isValidTimeInput("   "), "Whitespace should be valid (treated as 0)")
     }
 
-    func testDashIsValid() {
-        XCTAssertTrue(isValidTimeInput("-"), "Lone dash should be valid (treated as 0)")
+    func testDashIsInvalid() {
+        XCTAssertFalse(isValidTimeInput("-"), "Lone dash should be invalid (negative values are not allowed)")
     }
 
     func testDotIsValid() {

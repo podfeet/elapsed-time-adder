@@ -65,31 +65,31 @@ func calcTotal(rows: [TimeRow]) -> TimeResult {
 
 /// Converts a raw field string to a `Double`, treating blank-ish values as zero.
 ///
-/// Mirrors `changeToZero()` from `timeMath.js`.  The special cases (`""`, `"-"`,
-/// `"."`) represent valid mid-edit states that should contribute nothing to the
-/// total rather than being flagged as errors.
+/// Mirrors `changeToZero()` from `timeMath.js`.  The special case `"."` represents
+/// a valid mid-edit state (the user is about to type a decimal) and contributes
+/// nothing to the total rather than being flagged as an error.
 ///
 /// - Parameter s: The raw string from an H/M/S text field.
-/// - Returns: The numeric value, or `0` if the string is blank, `"-"`, `"."`,
+/// - Returns: The numeric value, or `0` if the string is blank, `"."`,
 ///   or otherwise non-numeric.
 func zeroIfBlank(_ s: String) -> Double {
     let t = s.trimmingCharacters(in: .whitespaces)
-    if t.isEmpty || t == "-" || t == "." { return 0 }
+    if t.isEmpty || t == "." { return 0 }
     return Double(t) ?? 0
 }
 
 /// Returns `true` when a string is acceptable input for an H/M/S field.
 ///
-/// Valid values are blank (treated as zero), the in-progress strings `"-"` and
-/// `"."`, or any non-negative number.  Letters, special characters, and negative
-/// numbers are invalid and will cause the error message to appear.
+/// Valid values are blank (treated as zero), the in-progress string `"."`,
+/// or any non-negative number.  Letters, special characters, negative numbers,
+/// and a bare `"-"` are invalid and will cause the error message to appear.
 ///
 /// - Parameter s: The raw string from an H/M/S text field.
 /// - Returns: `true` if the string is empty, a recognised partial value, or a
 ///   non-negative `Double`; `false` otherwise.
 func isValidTimeInput(_ s: String) -> Bool {
     let t = s.trimmingCharacters(in: .whitespaces)
-    if t.isEmpty || t == "-" || t == "." { return true }
+    if t.isEmpty || t == "." { return true }
     guard let value = Double(t) else { return false }
     return value >= 0
 }

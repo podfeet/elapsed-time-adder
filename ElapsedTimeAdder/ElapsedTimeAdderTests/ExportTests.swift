@@ -39,7 +39,7 @@ final class ExportTests: XCTestCase {
         let rows = [makeRow(h: "0", m: "5", s: "0")]
         let total = calcTotal(rows: rows)
         let lines = csvString(rows: rows, total: total).components(separatedBy: "\n")
-        XCTAssertTrue(lines[1].hasPrefix(","))   // blank title → leading comma
+        XCTAssertTrue(lines[1].hasPrefix("Row 1,"))   // blank title → "Row 1"
     }
 
     func testCSVTotalRow() {
@@ -96,13 +96,13 @@ final class ExportTests: XCTestCase {
         let rows = [makeRow(h: "0", m: "5", s: "0")]   // no title
         let total = calcTotal(rows: rows)
         let lines = hhmmssString(rows: rows, total: total).components(separatedBy: "\n")
-        XCTAssertTrue(lines[0].hasPrefix("Row:"))
+        XCTAssertTrue(lines[1].hasPrefix("Row 1:"))   // header at [0]; blank title → "Row 1"
     }
 
     func testHHMMSSNamedRow() {
         let rows = [makeRow(title: "Segment A", h: "0", m: "5", s: "0")]
         let total = calcTotal(rows: rows)
         let lines = hhmmssString(rows: rows, total: total).components(separatedBy: "\n")
-        XCTAssertTrue(lines[0].hasPrefix("Segment A:"))
+        XCTAssertTrue(lines[1].hasPrefix("Segment A:"))   // header at [0]; data at [1]
     }
 }
