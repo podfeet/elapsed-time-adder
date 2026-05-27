@@ -128,3 +128,24 @@ sips -z 1024 1024 "$SRC" --out "$DEST/AppIcon-512@2x.png"
 ### Product → Archive
 
 then opens archives and can run validate
+
+
+
+## Process to upload a new build
+
+**In Xcode:**
+
+1. Bump the **Build number** (select the project → target → General → Identity — increment the Build field, e.g. 3 → 4). Version number only needs to change if you're doing a new release.
+2. Set the destination to **Any iOS Device (arm64)** — not a simulator
+3. **Product → Archive** — this builds a release archive (takes a minute)
+4. The **Organizer** window opens automatically showing your archive
+5. Click **Distribute App**
+6. Choose **TestFlight & App Store** → **Next**
+7. Keep defaults and click through until it uploads — Xcode handles the signing and submission
+
+**In App Store Connect (appstoreconnect.apple.com):**
+
+1. Go to your app → **TestFlight** tab
+2. The new build will appear (may take a few minutes to process, you'll get an email when ready)
+3. If it's your first time with a new build, Apple may ask you to fill in an **Export Compliance** question (just answer No to encryption if you're not using any custom encryption)
+4. Once processed, click the build and add it to your test group to make it available to testers
