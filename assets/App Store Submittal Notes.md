@@ -149,3 +149,44 @@ then opens archives and can run validate
 2. The new build will appear (may take a few minutes to process, you'll get an email when ready)
 3. If it's your first time with a new build, Apple may ask you to fill in an **Export Compliance** question (just answer No to encryption if you're not using any custom encryption)
 4. Once processed, click the build and add it to your test group to make it available to testers
+
+## Better screenshots
+
+from Claude code:
+
+### Suggested scenes (in priority order):
+
+1. **The core use case** — a few rows filled in with real-looking data (podcast segment times, commute times, something relatable), showing the plain-English total at the top. This is your hero shot and should be first.
+2. **Mix of add and subtract** — show the +/− toggle in action, with some rows green and some red. Demonstrates the killer feature immediately.
+3. **The export sheet** — share sheet open showing AirDrop, Mail, etc. Shows it's not just a calculator, you can do something with the result.
+4. **iPad/Mac wide layout** — the split view with sidebar looks really polished and shows it's a proper multiplatform app.
+5. **The About sheet** — shows the Podfeet branding and feedback links, adds personality.
+
+**For the overlay text, something like:**
+
+- "Add and subtract times in seconds"
+- "Mix additions and subtractions"
+- "Export to CSV or HH:MM:SS"
+- "Works on iPhone, iPad, and Mac"
+
+### Size of screenshots
+
+For App Store screenshots, the required pixel dimensions vary by device:
+
+**iPhone (required):**
+
+- 6.9" display: **1320 × 2868** (iPhone 16 Pro Max) — this is the one Apple requires and it scales down to cover other iPhone sizes
+
+**iPad (required if you support iPad):**
+
+- 13" display: **2064 × 2752** — covers all iPad sizes
+
+**Mac (required if you support Mac):**
+
+- Minimum **1280 × 800**, but can be up to **2560 × 1600** — aspect ratio is landscape **16:10**
+
+So iPhone and iPad are both portrait (tall), Mac is landscape (wide). You'll need different compositions for Mac vs iPhone/iPad since the orientation flips.
+
+### Number of screenshots
+
+You can upload up to **10 screenshots per device size**. Apple just requires a minimum of 1. More is generally better since each one is a chance to highlight a different feature before someone decides whether to download.
