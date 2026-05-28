@@ -147,6 +147,9 @@ final class AccessibilityTests: XCTestCase {
         // 6. Scroll down to reveal Reset and tap it
         app.swipeUp(velocity: .slow)
         app.buttons["resetButton"].tap()
+        // Brief pause to let SwiftUI finish layout after reset — prevents
+        // "Invalid frame dimension" warnings in the accessibility tree.
+        Thread.sleep(forTimeInterval: 0.3)
 
         // 7. Verify everything is back to the initial state
         XCTAssertEqual(app.textFields.matching(hoursPredicate).count, initialRowCount,

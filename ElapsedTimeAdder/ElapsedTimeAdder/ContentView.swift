@@ -110,11 +110,8 @@ struct ContentView: View {
                     .plainRow()
                     exportButtons
                         .plainRow(top: 0)
-                    Divider()
-                        .plainRow(top: 4, bottom: 4)
-                        .accessibilityHidden(true)
                     resetButton
-                        .plainRow()
+                        .plainRow(top: 12)
                     spreadsheetButton
                         .plainRow()
                     podfeetBranding
@@ -125,6 +122,18 @@ struct ContentView: View {
                 .navigationTitle("Elapsed Time Adder")
 #if os(iOS)
                 .toolbar(.hidden, for: .navigationBar)
+                .toolbar {
+                    ToolbarItem(placement: .keyboard) {
+                        Button {
+                            UIApplication.shared.sendAction(
+                                #selector(UIResponder.resignFirstResponder),
+                                to: nil, from: nil, for: nil
+                            )
+                        } label: {
+                            Image(systemName: "keyboard.chevron.compact.down")
+                        }
+                    }
+                }
 #elseif os(macOS)
                 .toolbar(.hidden, for: .windowToolbar)
                 .ignoresSafeArea(edges: .top)
