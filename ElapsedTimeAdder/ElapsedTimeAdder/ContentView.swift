@@ -167,8 +167,8 @@ struct ContentView: View {
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.top, 4)
             .accessibilityIdentifier("addRowButton")
-            Divider().padding(.vertical, 8).accessibilityHidden(true)
             resetButton
+                .padding(.top, 8)
         }
         .frame(maxWidth: 560)
         .frame(maxWidth: .infinity, alignment: .center)

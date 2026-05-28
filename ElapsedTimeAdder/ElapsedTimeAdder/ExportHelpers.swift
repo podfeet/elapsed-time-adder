@@ -50,6 +50,9 @@ final class ExportActivityItem: NSObject, UIActivityItemSource {
     ) -> LPLinkMetadata? {
         let metadata = LPLinkMetadata()
         metadata.title = fileURL.lastPathComponent
+        if let appIcon = UIImage(named: "AppIcon") {
+            metadata.iconProvider = NSItemProvider(object: appIcon)
+        }
         return metadata
     }
 }
