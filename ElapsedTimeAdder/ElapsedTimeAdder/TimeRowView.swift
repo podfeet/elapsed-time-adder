@@ -10,11 +10,14 @@ struct TimeRowView: View {
     @Bindable var row: TimeRow
     var isLast: Bool = false
     var onAddRow: (() -> Void)? = nil
+    @Environment(\.colorScheme) private var colorScheme
 
     private var hoursValid:   Bool { isValidTimeInput(row.hours) }
     private var minutesValid: Bool { isValidTimeInput(row.minutes) }
     private var secondsValid: Bool { isValidTimeInput(row.seconds) }
     private var hasError:     Bool { !hoursValid || !minutesValid || !secondsValid }
+
+    private var rowBackgroundOpacity: Double { colorScheme == .dark ? 0.12 : 0.08 }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -106,7 +109,7 @@ struct TimeRowView: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(row.isSubtracting ? Color.red.opacity(0.08) : Color.green.opacity(0.08))
+                .fill(row.isSubtracting ? Color.red.opacity(rowBackgroundOpacity) : Color.green.opacity(rowBackgroundOpacity))
         )
     }
 

@@ -12,8 +12,10 @@ struct ContentView: View {
     @State private var showSpreadsheetNote = false
     @State private var showAboutSheet = false
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.colorScheme) private var colorScheme
 
     private var isWide: Bool { horizontalSizeClass == .regular }
+    private var buttonOpacity: Double { colorScheme == .dark ? 0.25 : 0.12 }
 
     private var total: TimeResult {
         calcTotal(rows: rows)
@@ -32,20 +34,23 @@ struct ContentView: View {
             // MARK: Wide layout — NavigationSplitView controls the columns so
             // WindowGroup doesn't insert its own blank primary column on iPad.
             NavigationSplitView {
-                ScrollView {
-                    VStack(spacing: 16) {
-                        Text("Elapsed Time Adder")
-                            .font(.largeTitle.bold())
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .multilineTextAlignment(.center)
-                        usageHint
-                        sidebarExportButtons
-                        Spacer(minLength: 32)
-                        spreadsheetButton
-                        podfeetBranding
+                VStack(spacing: 0) {
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            Text("Elapsed Time Adder")
+                                .font(.largeTitle.bold())
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .multilineTextAlignment(.center)
+                            usageHint
+                            sidebarExportButtons
+                            spreadsheetButton
+                        }
+                        .padding()
                     }
-                    .padding()
+                    sidebarAboutContent
+                        .padding()
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
 #if os(iOS)
                 .toolbar(.hidden, for: .navigationBar)
 #endif
@@ -54,7 +59,7 @@ struct ContentView: View {
 #else
                 .navigationSplitViewColumnWidth(min: 220, ideal: 300, max: 380)
 #endif
-                .background(Color.secondary.opacity(0.12))
+                .background(colorScheme == .dark ? Color.clear : Color.secondary.opacity(0.12))
                 .ignoresSafeArea(edges: .leading)
             } detail: {
                 ScrollView {
@@ -68,8 +73,8 @@ struct ContentView: View {
             }
             .navigationSplitViewStyle(.balanced)
             .onAppear {
-                if rows.count < 5 {
-                    rows.append(contentsOf: (rows.count..<5).map { _ in TimeRow() })
+                if rows.count < 8 {
+                    rows.append(contentsOf: (rows.count..<8).map { _ in TimeRow() })
                 }
             }
 
@@ -103,7 +108,7 @@ struct ContentView: View {
                             .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 8)
-                            .background(Color.blue.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+                            .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("addRowButton")
@@ -160,7 +165,7 @@ struct ContentView: View {
                     .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
-                    .background(Color.blue.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+                    .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
             }
             .buttonStyle(.plain)
             .frame(maxWidth: 320)
@@ -222,7 +227,7 @@ struct ContentView: View {
                     .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
-                    .background(Color.blue.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+                    .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
             }
             .buttonStyle(.plain)
 
@@ -234,7 +239,7 @@ struct ContentView: View {
                     .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
-                    .background(Color.blue.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+                    .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
             }
             .buttonStyle(.plain)
         }
@@ -252,7 +257,7 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .padding(.horizontal, 24)
-                    .background(Color.blue.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+                    .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
             }
             .buttonStyle(.plain)
 
@@ -265,7 +270,7 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .padding(.horizontal, 24)
-                    .background(Color.blue.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+                    .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
             }
             .buttonStyle(.plain)
         }
@@ -318,7 +323,7 @@ struct ContentView: View {
                 .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
-                .background(Color.red.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+                .background(Color.red.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
         .frame(maxWidth: isWide ? 320 : .infinity)
@@ -354,6 +359,64 @@ struct ContentView: View {
         .sheet(isPresented: $showAboutSheet) {
             AboutSheet()
         }
+    }
+
+    private var versionString: String {
+        let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+        let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
+        return "Version \(v) (build \(b))"
+    }
+
+    private var sidebarAboutContent: some View {
+        VStack(spacing: 12) {
+            Image("PodfeetLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(height: 36)
+
+            Text("Elapsed Time Adder")
+                .font(.headline)
+
+            Text("A Podfeet App")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            Text(versionString)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            VStack(spacing: 8) {
+                Link(destination: URL(string: "https://timeadder.podfeet.com")!) {
+                    Label("Visit timeadder.podfeet.com", systemImage: "safari")
+                        .foregroundStyle(.primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+                        .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 10))
+                }
+                Link(destination: URL(string: "mailto:allison@podfeet.com?subject=Elapsed%20Time%20Adder%20Feedback")!) {
+                    Label("Send feedback or ask a question", systemImage: "envelope")
+                        .foregroundStyle(.primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+                        .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 10))
+                }
+                Link(destination: URL(string: "https://github.com/podfeet/elapsed-time-adder/issues/new")!) {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: "ladybug")
+                            .padding(.top, 2)
+                        Text("Of the nerd persuasion? Submit an issue on GitHub")
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .foregroundStyle(.primary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 10))
+                }
+            }
+            .padding(.horizontal, 48)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Helpers
@@ -428,6 +491,8 @@ private struct ExportShareSheet: UIViewControllerRepresentable {
 
 private struct AboutSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
+    private var buttonOpacity: Double { colorScheme == .dark ? 0.25 : 0.12 }
 
     private var versionString: String {
         let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
@@ -465,14 +530,14 @@ private struct AboutSheet: View {
                             .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding()
-                            .background(Color.blue.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+                            .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 10))
                     }
                     Link(destination: URL(string: "mailto:allison@podfeet.com?subject=Elapsed%20Time%20Adder%20Feedback")!) {
                         Label("Send feedback or ask a question", systemImage: "envelope")
                             .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding()
-                            .background(Color.blue.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+                            .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 10))
                     }
                     Link(destination: URL(string: "https://github.com/podfeet/elapsed-time-adder/issues/new")!) {
                         HStack(alignment: .top, spacing: 10) {
@@ -485,7 +550,7 @@ private struct AboutSheet: View {
                         .foregroundStyle(.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding()
-                        .background(Color.blue.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+                        .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 10))
                     }
                 }
                 .padding(.horizontal, 24)
