@@ -6,11 +6,17 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ContentView: View {
     @State private var rows: [TimeRow] = [TimeRow(), TimeRow()]
     @State private var showSpreadsheetNote = false
     @State private var showAboutSheet = false
+    @State private var isEditing = false
+    @State private var draggedRow: TimeRow?
+#if os(iOS)
+    @State private var editMode: EditMode = .inactive
+#endif
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.colorScheme) private var colorScheme
 
@@ -27,6 +33,15 @@ struct ContentView: View {
             !isValidTimeInput($0.minutes) ||
             !isValidTimeInput($0.seconds)
         }
+    }
+
+    private func deleteRows(at offsets: IndexSet) {
+        rows.remove(atOffsets: offsets)
+        if rows.count < 2 { rows.append(contentsOf: (rows.count..<2).map { _ in TimeRow() }) }
+    }
+
+    private func moveRows(from source: IndexSet, to destination: Int) {
+        rows.move(fromOffsets: source, toOffset: destination)
     }
 
     var body: some View {
@@ -80,8 +95,65 @@ struct ContentView: View {
 #endif
             } detail: {
                 ScrollView {
-                    rowsSection
-                        .padding()
+                    VStack(spacing: 16) {
+                        editRowsButton
+                            .padding(.horizontal, 10)
+                        columnHeaders
+                            .padding(.horizontal, 10)
+                        ForEach(rows) { row in
+                            HStack(spacing: 8) {
+                                if isEditing {
+                                    Button {
+                                        if let index = rows.firstIndex(where: { $0.id == row.id }) {
+                                            deleteRows(at: IndexSet([index]))
+                                        }
+                                    } label: {
+                                        Image(systemName: "minus.circle.fill")
+                                            .foregroundStyle(.red)
+                                            .font(.title2)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .transition(.move(edge: .leading).combined(with: .opacity))
+                                }
+                                TimeRowView(row: row,
+                                            isLast: row.id == rows.last?.id,
+                                            onAddRow: { rows.append(TimeRow()) })
+                                    .frame(maxWidth: .infinity)
+                                if isEditing {
+                                    Image(systemName: "line.3.horizontal")
+                                        .foregroundStyle(.secondary)
+                                        .font(.title3)
+                                        .padding(.trailing, 4)
+                                        .transition(.move(edge: .trailing).combined(with: .opacity))
+                                }
+                            }
+                            .onDrag {
+                                draggedRow = row
+                                return NSItemProvider(object: row.id.uuidString as NSString)
+                            }
+                            .onDrop(of: [UTType.text], delegate: RowDropDelegate(
+                                targetRow: row, rows: $rows, draggedRow: $draggedRow))
+                        }
+                        totalSummarySection
+                        Button {
+                            rows.append(TimeRow())
+                        } label: {
+                            Text("Add Another Row")
+                                .foregroundStyle(.primary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                                .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
+                        }
+                        .buttonStyle(.plain)
+                        .frame(maxWidth: 320)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .accessibilityIdentifier("addRowButton")
+                        resetButton
+                            .padding(.top, 8)
+                    }
+                    .padding()
+                    .frame(maxWidth: 560)
+                    .frame(maxWidth: .infinity, alignment: .center)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 #if os(iOS)
@@ -107,15 +179,20 @@ struct ContentView: View {
                         .plainRow()
                     usageHint
                         .plainRow()
+                    editRowsButton
+                        .plainRow(top: 4, bottom: 0)
                     columnHeaders
                         .padding(.horizontal, 10)
                         .plainRow(top: 4, bottom: 0)
                     ForEach(rows) { row in
                         TimeRowView(row: row,
                                     isLast: row.id == rows.last?.id,
-                                    onAddRow: { rows.append(TimeRow()) })
+                                    onAddRow: { rows.append(TimeRow()) },
+                                    isEditMode: isEditing)
                             .plainRow(top: 4, bottom: 4)
                     }
+                    .onDelete(perform: deleteRows)
+                    .onMove(perform: moveRows)
                     totalSummarySection
                         .plainRow()
                     Button {
@@ -141,6 +218,9 @@ struct ContentView: View {
                 }
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
+#if os(iOS)
+                .environment(\.editMode, $editMode)
+#endif
                 .navigationTitle("Elapsed Time Adder")
 #if os(iOS)
                 .toolbar(.hidden, for: .navigationBar)
@@ -164,15 +244,58 @@ struct ContentView: View {
         }
     }
 
+    private var editRowsButton: some View {
+        HStack {
+            Spacer()
+            Button {
+                withAnimation {
+                    isEditing.toggle()
+#if os(iOS)
+                    editMode = isEditing ? .active : .inactive
+#endif
+                }
+            } label: {
+                Label(isEditing ? "Done" : "Edit Rows",
+                      systemImage: isEditing ? "checkmark.circle.fill" : "pencil")
+                    .font(.subheadline)
+                    .foregroundStyle(isEditing ? .white : .primary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(
+                        isEditing ? Color.blue : Color.blue.opacity(buttonOpacity),
+                        in: RoundedRectangle(cornerRadius: 8)
+                    )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
     // Used by the wide sidebar layout for the right-hand column
     private var rowsSection: some View {
         VStack(spacing: 16) {
+            editRowsButton
+                .padding(.horizontal, 10)
             columnHeaders
                 .padding(.horizontal, 10)
             ForEach(rows) { row in
-                TimeRowView(row: row,
-                            isLast: row.id == rows.last?.id,
-                            onAddRow: { rows.append(TimeRow()) })
+                HStack(spacing: 8) {
+                    if isEditing {
+                        Button {
+                            if let index = rows.firstIndex(where: { $0.id == row.id }) {
+                                deleteRows(at: IndexSet([index]))
+                            }
+                        } label: {
+                            Image(systemName: "minus.circle.fill")
+                                .foregroundStyle(.red)
+                                .font(.title2)
+                        }
+                        .buttonStyle(.plain)
+                        .transition(.move(edge: .leading).combined(with: .opacity))
+                    }
+                    TimeRowView(row: row,
+                                isLast: row.id == rows.last?.id,
+                                onAddRow: { rows.append(TimeRow()) })
+                }
             }
             totalSummarySection
             Button {
@@ -312,7 +435,6 @@ struct ContentView: View {
             Color.clear
                 .frame(maxWidth: .infinity, maxHeight: 1)
                 .accessibilityHidden(true)
-
             Text("Hrs")
                 .frame(width: 55, alignment: .center)
                 .accessibilityLabel("Hours")
@@ -322,7 +444,6 @@ struct ContentView: View {
             Text("Sec")
                 .frame(width: 55, alignment: .center)
                 .accessibilityLabel("Seconds")
-
             Color.clear
                 .frame(width: 64, height: 1)
                 .accessibilityHidden(true)
@@ -334,7 +455,11 @@ struct ContentView: View {
 
     private var resetButton: some View {
         Button {
-            rows = [TimeRow(), TimeRow()]
+            rows = Array(repeating: TimeRow(), count: isWide ? 8 : 2)
+            isEditing = false
+#if os(iOS)
+            editMode = .inactive
+#endif
         } label: {
             Text("Reset")
                 .foregroundStyle(.primary)
@@ -593,6 +718,35 @@ private extension View {
             .listRowSeparator(.hidden)
             .listRowBackground(Color.clear)
             .listRowInsets(EdgeInsets(top: top, leading: 16, bottom: bottom, trailing: 16))
+    }
+}
+
+// MARK: - Row reorder (wide layout)
+
+private struct RowDropDelegate: DropDelegate {
+    let targetRow: TimeRow
+    @Binding var rows: [TimeRow]
+    @Binding var draggedRow: TimeRow?
+
+    func performDrop(info: DropInfo) -> Bool {
+        draggedRow = nil
+        return true
+    }
+
+    func dropEntered(info: DropInfo) {
+        guard let dragged = draggedRow,
+              dragged.id != targetRow.id,
+              let fromIndex = rows.firstIndex(where: { $0.id == dragged.id }),
+              let toIndex   = rows.firstIndex(where: { $0.id == targetRow.id })
+        else { return }
+        withAnimation {
+            rows.move(fromOffsets: IndexSet([fromIndex]),
+                      toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex)
+        }
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
     }
 }
 
