@@ -74,7 +74,11 @@ struct ContentView: View {
                 .background(colorScheme == .dark ? Color.clear : Color.secondary.opacity(0.12))
                 .ignoresSafeArea(edges: .leading)
 #else
-                // macOS: simple ScrollView, About & Feedback at bottom of scroll content
+                // macOS: simple ScrollView, About & Feedback at the bottom of the scroll
+                // content. Pinning it to the window bottom does NOT work inside macOS
+                // NavigationSplitView — both the iPad VStack wrapper (spinning beachball)
+                // and safeAreaInset (content overflows top & bottom of the window) fail.
+                // Leave it scrolling; macOS sidebars don't bottom-pin like iPad.
                 ScrollView {
                     VStack(spacing: 16) {
                         Text("Elapsed Time Adder")
@@ -85,7 +89,7 @@ struct ContentView: View {
                         sidebarExportButtons
                         spreadsheetButton
                         sidebarAboutContent
-                            .padding(.top, 16)
+                            .padding(.top, 48)
                     }
                     .padding()
                 }
@@ -388,6 +392,34 @@ struct ContentView: View {
     // Sidebar variant: stacked vertically, both buttons sized to the widest one, centered
     private var sidebarExportButtons: some View {
         VStack(spacing: 16) {
+#if os(macOS)
+            // macOS: direct ShareLink (not wrapped in ExportButton) so macOS can
+            // automatically show the app icon in the share popover — the generic
+            // ExportButton wrapper breaks this automatic behaviour.
+            ShareLink(item: csvExportURL(rows: rows, total: total),
+                      preview: SharePreview("Elapsed Time Adder Export.csv",
+                                            icon: Image(nsImage: NSApp.applicationIconImage))) {
+                Text("Export CSV")
+                    .foregroundStyle(.primary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 24)
+                    .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
+            }
+            .buttonStyle(.plain)
+
+            ShareLink(item: hhmmssExportURL(rows: rows, total: total),
+                      preview: SharePreview("Elapsed Time Adder Export.txt",
+                                            icon: Image(nsImage: NSApp.applicationIconImage))) {
+                Text("Export HH:MM:SS")
+                    .foregroundStyle(.primary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 24)
+                    .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
+            }
+            .buttonStyle(.plain)
+#else
             ExportButton(
                 getText: { csvString(rows: rows, total: total) },
                 getFileURL: { csvExportURL(rows: rows, total: total) }
@@ -413,6 +445,7 @@ struct ContentView: View {
                     .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
             }
             .buttonStyle(.plain)
+#endif
         }
         .frame(width: 320)
         .frame(maxWidth: .infinity)
@@ -455,7 +488,7 @@ struct ContentView: View {
 
     private var resetButton: some View {
         Button {
-            rows = Array(repeating: TimeRow(), count: isWide ? 8 : 2)
+            rows = (0..<(isWide ? 8 : 2)).map { _ in TimeRow() }
             isEditing = false
 #if os(iOS)
             editMode = .inactive
@@ -556,7 +589,14 @@ struct ContentView: View {
                     .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 10))
                 }
             }
+            // 48pt suits the wide iPad sidebar (640pt); the macOS sidebar is only
+            // 220–380pt, where 48pt can compute a negative content width during
+            // transient layout ("Invalid frame dimension" warning) — use 16pt there.
+#if os(macOS)
+            .padding(.horizontal, 16)
+#else
             .padding(.horizontal, 48)
+#endif
         }
         .frame(maxWidth: .infinity)
     }
@@ -608,6 +648,8 @@ private struct ExportButton<Label: View>: View {
             }
     }
 #else
+    // macOS export uses direct ShareLink in sidebarExportButtons (not this wrapper)
+    // so the app icon shows automatically in the share popover.
     var body: some View {
         let url = getFileURL()
         ShareLink(item: url, preview: SharePreview(url.lastPathComponent)) {

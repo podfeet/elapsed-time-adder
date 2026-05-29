@@ -50,6 +50,10 @@ final class ExportActivityItem: NSObject, UIActivityItemSource {
     ) -> LPLinkMetadata? {
         let metadata = LPLinkMetadata()
         metadata.title = fileURL.lastPathComponent
+        // IMPORTANT: iconProvider supplies the app icon in the iOS share sheet header.
+        // Do NOT remove metadata.url as a substitute — it suppresses the title for
+        // HH:MM:SS exports. iconProvider is the only correct way to show the icon.
+        // This has regressed multiple times; do not touch without testing both exports.
         if let appIcon = UIImage(named: "AppIcon") {
             metadata.iconProvider = NSItemProvider(object: appIcon)
         }
@@ -109,7 +113,7 @@ func csvString(rows: [TimeRow], total: TimeResult) -> String {
         let h = zeroIfBlank(row.hours)
         let m = zeroIfBlank(row.minutes)
         let s = zeroIfBlank(row.seconds)
-        lines.append("\(label),\(rawNum(h)),\(rawNum(m)),\(rawNum(s))")
+        lines.append("\(csvQuote(label)),\(rawNum(h)),\(rawNum(m)),\(rawNum(s))")
     }
     lines.append("Total,\(rawNum(total.hours)),\(rawNum(total.minutes)),\(rawNum(total.seconds))")
     return lines.joined(separator: "\n")
@@ -150,6 +154,13 @@ func hhmmssString(rows: [TimeRow], total: TimeResult) -> String {
 }
 
 // MARK: - Private helpers
+
+/// Wraps a CSV field in double quotes and escapes any internal double quotes
+/// by doubling them, per RFC 4180. Keeps numeric-only fields unquoted.
+private func csvQuote(_ s: String) -> String {
+    let escaped = s.replacingOccurrences(of: "\"", with: "\"\"")
+    return "\"\(escaped)\""
+}
 
 /// Returns `true` when a row has no title and all time fields are zero —
 /// meaning it contributes nothing and should be omitted from exports.

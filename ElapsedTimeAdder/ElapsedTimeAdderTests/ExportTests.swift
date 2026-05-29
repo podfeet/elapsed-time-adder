@@ -32,14 +32,14 @@ final class ExportTests: XCTestCase {
         let rows = [makeRow(title: "Intro", h: "1", m: "30", s: "0")]
         let total = calcTotal(rows: rows)
         let lines = csvString(rows: rows, total: total).components(separatedBy: "\n")
-        XCTAssertEqual(lines[1], "Intro,1,30,0")
+        XCTAssertEqual(lines[1], "\"Intro\",1,30,0")
     }
 
     func testCSVEmptyTitle() {
         let rows = [makeRow(h: "0", m: "5", s: "0")]
         let total = calcTotal(rows: rows)
         let lines = csvString(rows: rows, total: total).components(separatedBy: "\n")
-        XCTAssertTrue(lines[1].hasPrefix("Row 1,"))   // blank title → "Row 1"
+        XCTAssertTrue(lines[1].hasPrefix("\"Row 1\","))   // blank title → "Row 1"
     }
 
     func testCSVTotalRow() {
@@ -47,6 +47,20 @@ final class ExportTests: XCTestCase {
         let total = calcTotal(rows: rows)
         let lines = csvString(rows: rows, total: total).components(separatedBy: "\n")
         XCTAssertEqual(lines.last, "Total,1,30,0")
+    }
+
+    func testCSVTitleWithCommaIsQuoted() {
+        let rows = [makeRow(title: "My Video, Part 1", h: "1", m: "0", s: "0")]
+        let total = calcTotal(rows: rows)
+        let lines = csvString(rows: rows, total: total).components(separatedBy: "\n")
+        XCTAssertEqual(lines[1], "\"My Video, Part 1\",1,0,0")
+    }
+
+    func testCSVTitleWithQuoteIsEscaped() {
+        let rows = [makeRow(title: "Allison's \"Best\" Clip", h: "0", m: "5", s: "0")]
+        let total = calcTotal(rows: rows)
+        let lines = csvString(rows: rows, total: total).components(separatedBy: "\n")
+        XCTAssertEqual(lines[1], "\"Allison's \"\"Best\"\" Clip\",0,5,0")
     }
 
     func testCSVNoUnnecessaryDecimals() {
