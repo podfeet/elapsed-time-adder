@@ -34,6 +34,8 @@ struct ContentView: View {
             // MARK: Wide layout — NavigationSplitView controls the columns so
             // WindowGroup doesn't insert its own blank primary column on iPad.
             NavigationSplitView {
+#if os(iOS)
+                // iPad: About & Feedback pinned to bottom via VStack
                 VStack(spacing: 0) {
                     ScrollView {
                         VStack(spacing: 16) {
@@ -47,20 +49,35 @@ struct ContentView: View {
                         }
                         .padding()
                     }
+                    .frame(maxWidth: .infinity)
                     sidebarAboutContent
                         .padding()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-#if os(iOS)
                 .toolbar(.hidden, for: .navigationBar)
-#endif
-#if os(iOS)
                 .navigationSplitViewColumnWidth(min: 320, ideal: 640, max: 640)
-#else
-                .navigationSplitViewColumnWidth(min: 220, ideal: 300, max: 380)
-#endif
                 .background(colorScheme == .dark ? Color.clear : Color.secondary.opacity(0.12))
                 .ignoresSafeArea(edges: .leading)
+#else
+                // macOS: simple ScrollView, About & Feedback at bottom of scroll content
+                ScrollView {
+                    VStack(spacing: 16) {
+                        Text("Elapsed Time Adder")
+                            .font(.largeTitle.bold())
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .multilineTextAlignment(.center)
+                        usageHint
+                        sidebarExportButtons
+                        spreadsheetButton
+                        sidebarAboutContent
+                            .padding(.top, 16)
+                    }
+                    .padding()
+                }
+                .navigationSplitViewColumnWidth(min: 220, ideal: 300, max: 380)
+                .background(Color.secondary.opacity(0.12))
+                .ignoresSafeArea(edges: .leading)
+#endif
             } detail: {
                 ScrollView {
                     rowsSection
