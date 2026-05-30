@@ -14,9 +14,6 @@ struct ContentView: View {
     @State private var showAboutSheet = false
     @State private var isEditing = false
     @State private var draggedRow: TimeRow?
-#if os(iOS)
-    @State private var editMode: EditMode = .inactive
-#endif
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.colorScheme) private var colorScheme
 
@@ -38,10 +35,6 @@ struct ContentView: View {
     private func deleteRows(at offsets: IndexSet) {
         rows.remove(atOffsets: offsets)
         if rows.count < 2 { rows.append(contentsOf: (rows.count..<2).map { _ in TimeRow() }) }
-    }
-
-    private func moveRows(from source: IndexSet, to destination: Int) {
-        rows.move(fromOffsets: source, toOffset: destination)
     }
 
     var body: some View {
@@ -131,12 +124,9 @@ struct ContentView: View {
                                         .transition(.move(edge: .trailing).combined(with: .opacity))
                                 }
                             }
-                            .onDrag {
-                                draggedRow = row
-                                return NSItemProvider(object: row.id.uuidString as NSString)
-                            }
-                            .onDrop(of: [UTType.text], delegate: RowDropDelegate(
-                                targetRow: row, rows: $rows, draggedRow: $draggedRow))
+                            .modifier(RowReorderModifier(
+                                isActive: isEditing, row: row,
+                                rows: $rows, draggedRow: $draggedRow))
                         }
                         totalSummarySection
                         Button {
@@ -189,14 +179,39 @@ struct ContentView: View {
                         .padding(.horizontal, 10)
                         .plainRow(top: 4, bottom: 0)
                     ForEach(rows) { row in
-                        TimeRowView(row: row,
-                                    isLast: row.id == rows.last?.id,
-                                    onAddRow: { rows.append(TimeRow()) },
-                                    isEditMode: isEditing)
-                            .plainRow(top: 4, bottom: 4)
+                        HStack(spacing: 8) {
+                            if isEditing {
+                                Button {
+                                    if let index = rows.firstIndex(where: { $0.id == row.id }) {
+                                        deleteRows(at: IndexSet([index]))
+                                    }
+                                } label: {
+                                    Image(systemName: "minus.circle.fill")
+                                        .foregroundStyle(.red)
+                                        .font(.title2)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("Delete row")
+                                .transition(.move(edge: .leading).combined(with: .opacity))
+                            }
+                            TimeRowView(row: row,
+                                        isLast: row.id == rows.last?.id,
+                                        onAddRow: { rows.append(TimeRow()) },
+                                        isEditMode: isEditing)
+                                .frame(maxWidth: .infinity)
+                            if isEditing {
+                                Image(systemName: "line.3.horizontal")
+                                    .foregroundStyle(.secondary)
+                                    .font(.title3)
+                                    .accessibilityLabel("Drag to reorder")
+                                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                            }
+                        }
+                        .plainRow(top: 4, bottom: 4)
+                        .modifier(RowReorderModifier(
+                            isActive: isEditing, row: row,
+                            rows: $rows, draggedRow: $draggedRow))
                     }
-                    .onDelete(perform: deleteRows)
-                    .onMove(perform: moveRows)
                     totalSummarySection
                         .plainRow()
                     Button {
@@ -222,9 +237,6 @@ struct ContentView: View {
                 }
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
-#if os(iOS)
-                .environment(\.editMode, $editMode)
-#endif
                 .navigationTitle("Elapsed Time Adder")
 #if os(iOS)
                 .toolbar(.hidden, for: .navigationBar)
@@ -252,12 +264,7 @@ struct ContentView: View {
         HStack {
             Spacer()
             Button {
-                withAnimation {
-                    isEditing.toggle()
-#if os(iOS)
-                    editMode = isEditing ? .active : .inactive
-#endif
-                }
+                withAnimation { isEditing.toggle() }
             } label: {
                 Label(isEditing ? "Done" : "Edit Rows",
                       systemImage: isEditing ? "checkmark.circle.fill" : "pencil")
@@ -271,6 +278,8 @@ struct ContentView: View {
                     )
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(isEditing ? "Done editing rows" : "Edit rows")
+            .accessibilityIdentifier("editRowsButton")
         }
     }
 
@@ -490,9 +499,6 @@ struct ContentView: View {
         Button {
             rows = (0..<(isWide ? 8 : 2)).map { _ in TimeRow() }
             isEditing = false
-#if os(iOS)
-            editMode = .inactive
-#endif
         } label: {
             Text("Reset")
                 .foregroundStyle(.primary)
@@ -548,17 +554,18 @@ struct ContentView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(height: 36)
+                .accessibilityHidden(true)   // decorative; text below conveys the same info
 
             Text("Elapsed Time Adder")
                 .font(.headline)
 
             Text("A Podfeet App")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.primary)   // .secondary fails WCAG AA contrast
 
             Text(versionString)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.primary)   // .secondary fails WCAG AA contrast
 
             VStack(spacing: 8) {
                 Link(destination: URL(string: "https://timeadder.podfeet.com")!) {
@@ -579,6 +586,7 @@ struct ContentView: View {
                     HStack(alignment: .top, spacing: 10) {
                         Image(systemName: "ladybug")
                             .padding(.top, 2)
+                            .accessibilityHidden(true)   // decorative; link text describes it
                         Text("Of the nerd persuasion? Submit an issue on GitHub")
                             .multilineTextAlignment(.leading)
                             .fixedSize(horizontal: false, vertical: true)
@@ -693,14 +701,15 @@ private struct AboutSheet: View {
                         .resizable()
                         .scaledToFit()
                         .frame(height: 64)
+                        .accessibilityHidden(true)   // decorative; text below conveys the same info
                     Text("Elapsed Time Adder")
                         .font(.title2.bold())
                     Text("A Podfeet App")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.primary)   // .secondary fails WCAG AA contrast
                     Text(versionString)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.primary)   // .secondary fails WCAG AA contrast
                 }
                 .padding(.top, 24)
                 .padding(.bottom, 24)
@@ -727,6 +736,7 @@ private struct AboutSheet: View {
                         HStack(alignment: .top, spacing: 10) {
                             Image(systemName: "ladybug")
                                 .padding(.top, 2)
+                                .accessibilityHidden(true)   // decorative; link text describes it
                             Text("Of the nerd persuasion? Submit an issue on GitHub")
                                 .multilineTextAlignment(.leading)
                                 .fixedSize(horizontal: false, vertical: true)
@@ -764,6 +774,31 @@ private extension View {
 }
 
 // MARK: - Row reorder (wide layout)
+
+/// Applies onDrag/onDrop ONLY when editing — no drag modifiers at all in normal mode.
+/// Applying onDrag to every List row unconditionally breaks app-level swipe hit-testing
+/// (XCUITest "Unable to find hit point for Application") and lets users accidentally drag
+/// rows when not in edit mode. Same conditional-modifier pattern as TabToAddRowModifier.
+private struct RowReorderModifier: ViewModifier {
+    let isActive: Bool
+    let row: TimeRow
+    @Binding var rows: [TimeRow]
+    @Binding var draggedRow: TimeRow?
+
+    func body(content: Content) -> some View {
+        if isActive {
+            content
+                .onDrag {
+                    draggedRow = row
+                    return NSItemProvider(object: row.id.uuidString as NSString)
+                }
+                .onDrop(of: [UTType.text], delegate: RowDropDelegate(
+                    targetRow: row, rows: $rows, draggedRow: $draggedRow))
+        } else {
+            content
+        }
+    }
+}
 
 private struct RowDropDelegate: DropDelegate {
     let targetRow: TimeRow
