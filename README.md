@@ -2,7 +2,7 @@
 
 Elapsed Time Adder is an app for macOS and iOS that helps you add (and subtract) elapsed time.
 
-Created by Allison Sheridan, the host of the [Podfeet Podcasts](https://www.podfeet.com) and co-host of [Programming By Stealth with Bart Busschots](https://pbs.bartificer.net).
+It was created by Allison Sheridan, the host of the [Podfeet Podcasts](https://www.podfeet.com) and co-host of [Programming By Stealth with Bart Busschots](https://pbs.bartificer.net).
 
 ## What Problem Does Time Adder Solve?
 
