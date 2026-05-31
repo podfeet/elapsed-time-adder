@@ -13,7 +13,7 @@ struct ElapsedTimeAdderApp: App {
         WindowGroup {
             ContentView()
 #if os(macOS)
-                .frame(minWidth: 680, minHeight: 680)
+                .frame(minWidth: 680, minHeight: 400)
 #endif
         }
     }

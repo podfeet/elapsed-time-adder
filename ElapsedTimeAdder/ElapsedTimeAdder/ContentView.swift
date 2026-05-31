@@ -96,8 +96,6 @@ struct ContentView: View {
             } detail: {
                 ScrollView {
                     VStack(spacing: 16) {
-                        editRowsButton
-                            .padding(.horizontal, 10)
                         columnHeaders
                             .padding(.horizontal, 10)
                         ForEach(rows) { row in
@@ -132,19 +130,12 @@ struct ContentView: View {
                                 rows: $rows, draggedRow: $draggedRow))
                         }
                         totalSummarySection
-                        Button {
-                            rows.append(TimeRow())
-                        } label: {
-                            Text("Add Another Row")
-                                .foregroundStyle(.primary)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 8)
-                                .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
+                        HStack(spacing: 8) {
+                            addRowButton
+                            editRowsButton
                         }
-                        .buttonStyle(.plain)
-                        .frame(maxWidth: 320)
+                        .frame(maxWidth: 360)
                         .frame(maxWidth: .infinity, alignment: .center)
-                        .accessibilityIdentifier("addRowButton")
                         resetButton
                             .padding(.top, 8)
                     }
@@ -159,8 +150,8 @@ struct ContentView: View {
             }
             .navigationSplitViewStyle(.balanced)
             .onAppear {
-                if rows.count < 8 {
-                    rows.append(contentsOf: (rows.count..<8).map { _ in TimeRow() })
+                if rows.count < 5 {
+                    rows.append(contentsOf: (rows.count..<5).map { _ in TimeRow() })
                 }
             }
 
@@ -176,8 +167,6 @@ struct ContentView: View {
                         .plainRow()
                     usageHint
                         .plainRow()
-                    editRowsButton
-                        .plainRow(top: 4, bottom: 0)
                     columnHeaders
                         .padding(.horizontal, 10)
                         .plainRow(top: 4, bottom: 0)
@@ -217,17 +206,10 @@ struct ContentView: View {
                     }
                     totalSummarySection
                         .plainRow()
-                    Button {
-                        rows.append(TimeRow())
-                    } label: {
-                        Text("Add Another Row")
-                            .foregroundStyle(.primary)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
+                    HStack(spacing: 8) {
+                        addRowButton
+                        editRowsButton
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("addRowButton")
                     .plainRow()
                     exportButtons
                         .plainRow(top: 0)
@@ -263,76 +245,41 @@ struct ContentView: View {
         }
     }
 
-    private var editRowsButton: some View {
-        HStack {
-            Spacer()
-            Button {
-                withAnimation { isEditing.toggle() }
-            } label: {
-                Label(isEditing ? "Done" : "Edit Rows",
-                      systemImage: isEditing ? "checkmark.circle.fill" : "pencil")
-                    .font(.subheadline)
-                    .foregroundStyle(isEditing ? .white : .primary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(
-                        isEditing ? Color.blue : Color.blue.opacity(buttonOpacity),
-                        in: RoundedRectangle(cornerRadius: 8)
-                    )
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(isEditing ? "Done editing rows" : "Edit rows")
-            .accessibilityIdentifier("editRowsButton")
+    // "Add Row" with a + icon (tester asked for a clearer add affordance). Half-width
+    // pill designed to sit in an HStack beside editRowsButton.
+    private var addRowButton: some View {
+        Button {
+            rows.append(TimeRow())
+        } label: {
+            Label("Add Row", systemImage: "plus")
+                .foregroundStyle(.primary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
         }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("addRowButton")
     }
 
-    // Used by the wide sidebar layout for the right-hand column
-    private var rowsSection: some View {
-        VStack(spacing: 16) {
-            editRowsButton
-                .padding(.horizontal, 10)
-            columnHeaders
-                .padding(.horizontal, 10)
-            ForEach(rows) { row in
-                HStack(spacing: 8) {
-                    if isEditing {
-                        Button {
-                            if let index = rows.firstIndex(where: { $0.id == row.id }) {
-                                deleteRows(at: IndexSet([index]))
-                            }
-                        } label: {
-                            Image(systemName: "minus.circle.fill")
-                                .foregroundStyle(.red)
-                                .font(.title2)
-                        }
-                        .buttonStyle(.plain)
-                        .transition(.move(edge: .leading).combined(with: .opacity))
-                    }
-                    TimeRowView(row: row,
-                                isLast: row.id == rows.last?.id,
-                                onAddRow: { rows.append(TimeRow()) })
-                }
-            }
-            totalSummarySection
-            Button {
-                rows.append(TimeRow())
-            } label: {
-                Text("Add Another Row")
-                    .foregroundStyle(.primary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                    .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
-            }
-            .buttonStyle(.plain)
-            .frame(maxWidth: 320)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.top, 4)
-            .accessibilityIdentifier("addRowButton")
-            resetButton
-                .padding(.top, 8)
+    // Edit Rows toggles row delete/reorder. Pencil icon (→ checkmark "Done") groups it
+    // with Add Row as a "row action"; the export buttons use the share-arrow icon instead.
+    private var editRowsButton: some View {
+        Button {
+            withAnimation { isEditing.toggle() }
+        } label: {
+            Label(isEditing ? "Done" : "Edit Rows",
+                  systemImage: isEditing ? "checkmark.circle.fill" : "pencil")
+                .foregroundStyle(isEditing ? .white : .primary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .background(
+                    isEditing ? Color.blue : Color.blue.opacity(buttonOpacity),
+                    in: RoundedRectangle(cornerRadius: 8)
+                )
         }
-        .frame(maxWidth: 560)
-        .frame(maxWidth: .infinity, alignment: .center)
+        .buttonStyle(.plain)
+        .accessibilityLabel(isEditing ? "Done editing rows" : "Edit rows")
+        .accessibilityIdentifier("editRowsButton")
     }
 
     // MARK: - Subviews
@@ -379,7 +326,7 @@ struct ContentView: View {
                 getText: { csvString(rows: rows, total: total) },
                 getFileURL: { csvExportURL(rows: rows, total: total) }
             ) {
-                Text("Export CSV")
+                Label("Export CSV", systemImage: "square.and.arrow.up")
                     .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
@@ -391,7 +338,7 @@ struct ContentView: View {
                 getText: { hhmmssString(rows: rows, total: total) },
                 getFileURL: { hhmmssExportURL(rows: rows, total: total) }
             ) {
-                Text("Export HH:MM:SS")
+                Label("Export HH:MM:SS", systemImage: "square.and.arrow.up")
                     .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
@@ -420,7 +367,7 @@ struct ContentView: View {
             ShareLink(item: csvExportURL(rows: rows, total: total),
                       preview: SharePreview("Elapsed Time Adder Export.csv",
                                             icon: Image(nsImage: NSApp.applicationIconImage))) {
-                Text("Export CSV")
+                Label("Export CSV", systemImage: "square.and.arrow.up")
                     .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
@@ -432,7 +379,7 @@ struct ContentView: View {
             ShareLink(item: hhmmssExportURL(rows: rows, total: total),
                       preview: SharePreview("Elapsed Time Adder Export.txt",
                                             icon: Image(nsImage: NSApp.applicationIconImage))) {
-                Text("Export HH:MM:SS")
+                Label("Export HH:MM:SS", systemImage: "square.and.arrow.up")
                     .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
@@ -445,7 +392,7 @@ struct ContentView: View {
                 getText: { csvString(rows: rows, total: total) },
                 getFileURL: { csvExportURL(rows: rows, total: total) }
             ) {
-                Text("Export CSV")
+                Label("Export CSV", systemImage: "square.and.arrow.up")
                     .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
@@ -458,7 +405,7 @@ struct ContentView: View {
                 getText: { hhmmssString(rows: rows, total: total) },
                 getFileURL: { hhmmssExportURL(rows: rows, total: total) }
             ) {
-                Text("Export HH:MM:SS")
+                Label("Export HH:MM:SS", systemImage: "square.and.arrow.up")
                     .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
@@ -509,7 +456,7 @@ struct ContentView: View {
 
     private var resetButton: some View {
         Button {
-            rows = (0..<(isWide ? 8 : 2)).map { _ in TimeRow() }
+            rows = (0..<(isWide ? 5 : 2)).map { _ in TimeRow() }
             isEditing = false
         } label: {
             Text("Reset")

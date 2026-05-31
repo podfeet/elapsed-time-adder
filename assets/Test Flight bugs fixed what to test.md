@@ -51,3 +51,35 @@ Title: Never do timestamp math in your head again
 12min 43sec  + 7.5min 22sec =20 mins 35 secs 
 
 ^^^ this was calculated automatically in Typora!
+
+## Video in App Store
+
+## App Preview video specs
+
+- **Length: 15–30 seconds.** Hard rule, enforced by App Store Connect.
+- **Up to 3 previews** per device size (they show *before* your screenshots in the carousel).
+- **Format:** `.mov`, `.m4v`, or `.mp4` (H.264 or ProRes), ~**30 fps**.
+- **Resolution:** the device's **native screen resolution** — and here's the catch: **no device frame.** Unlike screenshots, an app preview must be the **raw screen content** at native size. If you wrap it in a phone bezel, the dimensions change and ASC rejects it.
+- **Must be real in-app footage.** Apple reviews these and rejects pure motion-graphics/marketing that isn't the actual app running.
+- **First frame = poster frame** (the still shown before someone hits play) — you can choose which frame.
+
+## How to capture (the reliable way)
+
+The cleanest path that *guarantees* an accepted resolution:
+
+1. **Plug your physical iPhone into the Mac** → open **QuickTime Player** → **File → New Movie Recording** → click the dropdown next to record and **select your iPhone** as the source.
+2. Record yourself using the app (calm, deliberate taps — enter a few times, hit a total, export, etc.).
+3. Edit in **iMovie / Final Cut** (you have the tools): trim to **15–25s**, add subtle music, maybe text captions for each feature, light zoom-ins. Export at the **native resolution** (don't add borders).
+
+> Simulator screen recordings (`xcrun simctl io booted recordVideo`, or Simulator → File → Record Screen) *can* work if the resolution matches an accepted size, but device-capture via QuickTime is the no-surprises route. For the 6.9" slot specifically, you'd want Pro Max footage — and since you don't own one, the **Pro Max simulator's Record Screen** is your friend there (same trick as your screenshots).
+
+## Where to upload
+
+**App Store Connect → My Apps → [your app] → [the version] → "App Previews and Screenshots"** — same section as screenshots. For each device size, there are **3 preview slots at the front** (before the screenshot slots). Drag the video in; ASC validates length + resolution on upload, then lets you pick the poster frame.
+
+## "Cool kids" tips
+
+- **Lead with your strongest feature in the first 3 seconds** — many people don't watch past that, and the poster frame is your hook.
+- **No narration needed** — captions + music read better on autoplay-muted.
+- **Keep it to 1–2 features**, not a full tour. For Time Adder: show entering a few rows, the live total updating, then an export. That's the whole story in ~15s.
+- **One 6.9" video can serve smaller iPhone sizes** (App Store Connect scales it), so you may only need to make the Pro Max one.
