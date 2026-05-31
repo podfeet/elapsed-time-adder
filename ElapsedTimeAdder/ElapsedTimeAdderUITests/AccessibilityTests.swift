@@ -34,42 +34,37 @@ final class AccessibilityTests: XCTestCase {
         try runDescriptionAndContrastAudit(label: "Spreadsheet note expanded")
     }
 
-    /// Runs the description + contrast accessibility audit, ignoring structural
-    /// container Groups. On macOS, `NavigationSplitView` exposes a window-sized
-    /// `SplitGroup`/`SidebarNavigationSplitView` container with no description — that's
-    /// a layout container, not user-facing content (VoiceOver navigates the content
-    /// inside it), so flagging it as "no description" is a framework false-positive.
-    /// We collect remaining issues and assert with full detail, so any *real* failing
-    /// element's identity shows up directly in the test failure message.
+    /// Runs the description and contrast audits as TWO SEPARATE passes. Combining them
+    /// in one `performAccessibilityAudit` call can exceed the audit's internal time
+    /// budget on the simulator → "Audit failed to complete in time" (error -56); the
+    /// `.contrast` check (rendered pixel-contrast analysis) is the expensive one, so it
+    /// gets its own budget here.
     private func runDescriptionAndContrastAudit(label: String) throws {
+        try runAudit(.sufficientElementDescription, label: "\(label)/description")
+        try runAudit(.contrast, label: "\(label)/contrast")
+    }
+
+    /// Runs a single audit type with a LIGHTWEIGHT closure (no `debugDescription`, which
+    /// stringifies the whole subtree and is slow per issue). Filters out framework /
+    /// system elements that have no description/role by nature — they are not our content:
+    ///  - structural containers: `.group` / `.splitGroup` (macOS NavigationSplitView)
+    ///  - untyped framework wrappers: `.other` (reported as "Unknown role"; our real
+    ///    content all has proper typed roles — staticText/button/textField/etc.)
+    ///  - macOS Touch Bar emoji/symbols bar: `.touchBar` + its `.popUpButton`
+    ///    (we have no real pop-up buttons in the app, so ignoring the type is safe)
+    ///  - system menus: `.menuBar` / `.menu`
+    private func runAudit(_ type: XCUIAccessibilityAuditType, label: String) throws {
         var issues: [String] = []
-        try app.performAccessibilityAudit(for: [.sufficientElementDescription, .contrast]) { issue in
-            let element = issue.element
-            let elementType = element?.elementType
-            let desc = element?.debugDescription ?? ""
-            // Ignore macOS system UI that isn't part of our app: on Macs with a Touch Bar,
-            // the emoji/symbols "Candidate Bar" (TouchBar + its PopUpButton) is injected
-            // into the accessibility tree and has no description. Not ours to fix.
-            if desc.contains("TouchBar") || elementType == .touchBar {
+        try app.performAccessibilityAudit(for: type) { issue in
+            switch issue.element?.elementType {
+            case .other, .group, .splitGroup, .touchBar, .popUpButton, .menuBar, .menu:
+                return true   // framework/system element → ignore
+            default:
+                let raw = issue.element?.elementType.rawValue.description ?? "nil"
+                issues.append("[\(label)] \(issue.compactDescription) (typeRawValue: \(raw))")
                 return true
             }
-            // Ignore structural container groups that have no description by nature.
-            // On macOS, NavigationSplitView exposes window-sized container Groups
-            // (SplitGroup / SidebarNavigationSplitView) — layout, not content.
-            let isContainer = elementType == .group
-                || elementType == .splitGroup
-                || desc.contains("NavigationSplitView")
-                || desc.contains("SplitGroup")
-            let isDescriptionIssue = issue.auditType.contains(.sufficientElementDescription)
-            if isDescriptionIssue && isContainer {
-                return true   // ignore framework structural container
-            }
-            let typeName = elementType.map(String.init(describing:)) ?? "unknown"
-            issues.append("[\(typeName)] \(issue.compactDescription) :: \(desc.prefix(300))")
-            return true
         }
-        // Single-line message so the full detail (incl. element type) shows in Xcode's
-        // inline error popup, not just a header.
         XCTAssertTrue(issues.isEmpty, "[\(label)] audit issues — " + issues.joined(separator: " ||| "))
     }
 

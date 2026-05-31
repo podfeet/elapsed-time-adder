@@ -7,6 +7,9 @@
 
 import SwiftUI
 import UniformTypeIdentifiers
+#if os(macOS)
+import AppKit
+#endif
 
 struct ContentView: View {
     @State private var rows: [TimeRow] = [TimeRow(), TimeRow()]
@@ -402,9 +405,18 @@ struct ContentView: View {
     private var sidebarExportButtons: some View {
         VStack(spacing: 16) {
 #if os(macOS)
-            // macOS: direct ShareLink (not wrapped in ExportButton) so macOS can
-            // automatically show the app icon in the share popover — the generic
-            // ExportButton wrapper breaks this automatic behaviour.
+            // macOS shares the named file URL for ALL destinations (chosen tradeoff:
+            // "named file everywhere"). AirDrop / Save to Files / Messages / Freeform get
+            // a proper "Elapsed Time Adder Export.csv/.txt"; Mail & Messages attach it.
+            // macOS NSSharingServicePicker has no reliable per-destination routing, so we
+            // cannot also make Mail inline the text without breaking AirDrop — do NOT try
+            // the dual-representation NSItemProvider again (it makes AirDrop vanish and
+            // leaves Messages/Freeform empty). SharePreview(name) shows the file icon.
+            // Icon choices on macOS, all imperfect (custom SharePreview icons are flaky):
+            //  - title-only SharePreview → generic compass placeholder (worst)
+            //  - no SharePreview → QuickLook thumbnail of a near-empty file = white smudge
+            //  - SharePreview(name, icon: app icon) → small app icon in a white square
+            // Allison prefers the last one. NSApp.applicationIconImage is the app icon.
             ShareLink(item: csvExportURL(rows: rows, total: total),
                       preview: SharePreview("Elapsed Time Adder Export.csv",
                                             icon: Image(nsImage: NSApp.applicationIconImage))) {
