@@ -50,10 +50,7 @@ struct ContentView: View {
                 VStack(spacing: 0) {
                     ScrollView {
                         VStack(spacing: 16) {
-                            Text("Elapsed Time Adder")
-                                .font(.largeTitle.bold())
-                                .frame(maxWidth: .infinity, alignment: .center)
-                                .multilineTextAlignment(.center)
+                            appTitle
                             usageHint
                             sidebarExportButtons
                             spreadsheetButton
@@ -77,10 +74,7 @@ struct ContentView: View {
                 // Leave it scrolling; macOS sidebars don't bottom-pin like iPad.
                 ScrollView {
                     VStack(spacing: 16) {
-                        Text("Elapsed Time Adder")
-                            .font(.largeTitle.bold())
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .multilineTextAlignment(.center)
+                        appTitle
                         usageHint
                         sidebarExportButtons
                         spreadsheetButton
@@ -160,10 +154,7 @@ struct ContentView: View {
             // List (UITableView) avoids the multi-tap-required-to-focus bug in ScrollView.
             NavigationStack {
                 List {
-                    Text("Elapsed Time Adder")
-                        .font(.largeTitle.bold())
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .multilineTextAlignment(.center)
+                    appTitle
                         .plainRow()
                     usageHint
                         .plainRow()
@@ -283,6 +274,25 @@ struct ContentView: View {
     }
 
     // MARK: - Subviews
+
+    // App title with the app icon to its left. The icon is decorative (the title text
+    // conveys the name), and the title may shrink slightly so icon+title fit on narrow
+    // iPhones. Used at the top of every layout (iPhone List, iPad/macOS sidebar).
+    private var appTitle: some View {
+        HStack(spacing: 10) {
+            Image("AppIconImage")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 36, height: 36)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .accessibilityHidden(true)
+            Text("Elapsed Time Adder")
+                .font(.largeTitle.bold())
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
+    }
 
     private var usageHint: some View {
         Text("Enter a time in each row and choose Add (+) or\nSubtract (−). The total updates as you type.")
@@ -488,6 +498,10 @@ struct ContentView: View {
                 Text("A Podfeet App · About & Feedback")
                     .font(.body)
                     .foregroundStyle(.primary)
+                Image(systemName: "chevron.forward")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)   // decorative; button hint conveys the action
             }
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.top, 4)
