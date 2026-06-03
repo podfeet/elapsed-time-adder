@@ -18,9 +18,20 @@ struct ContentView: View {
     @State private var isEditing = false
     @State private var draggedRow: TimeRow?
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.colorScheme) private var colorScheme
 
-    private var isWide: Bool { horizontalSizeClass == .regular }
+    // Wide (sidebar) layout = real iPad full-screen or Mac only. Require BOTH size
+    // classes to be .regular: a Plus/Max iPhone in landscape reports horizontal .regular
+    // (like an iPad) but vertical .compact, so it would wrongly pick the iPad layout if we
+    // checked horizontal alone. macOS always uses the wide layout.
+    private var isWide: Bool {
+#if os(macOS)
+        true
+#else
+        horizontalSizeClass == .regular && verticalSizeClass == .regular
+#endif
+    }
     private var buttonOpacity: Double { colorScheme == .dark ? 0.25 : 0.12 }
 
     private var total: TimeResult {
@@ -299,7 +310,8 @@ struct ContentView: View {
             .font(.callout)
             .foregroundStyle(.primary)
             .multilineTextAlignment(.center)
-            .frame(maxWidth: 480, alignment: .center)
+            .frame(maxWidth: 480)                      // cap the text width
+            .frame(maxWidth: .infinity, alignment: .center)  // center that block full-width
             .accessibilityIdentifier("usageHint")
     }
 
@@ -657,7 +669,12 @@ private struct ExportShareSheet: UIViewControllerRepresentable {
 private struct AboutSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     private var buttonOpacity: Double { colorScheme == .dark ? 0.25 : 0.12 }
+
+    // Short screens = iPhone landscape. Compact the header and use the full sheet height
+    // so all three links fit at once (no scrolling).
+    private var isShort: Bool { verticalSizeClass == .compact }
 
     private var versionString: String {
         let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
@@ -668,15 +685,15 @@ private struct AboutSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Header
-                VStack(spacing: 10) {
+                // Header (compact on short/landscape screens to leave room for the links)
+                VStack(spacing: isShort ? 4 : 10) {
                     Image("PodfeetLogo")
                         .resizable()
                         .scaledToFit()
-                        .frame(height: 64)
+                        .frame(height: isShort ? 32 : 64)
                         .accessibilityHidden(true)   // decorative; text below conveys the same info
                     Text("Elapsed Time Adder")
-                        .font(.title2.bold())
+                        .font(isShort ? .headline : .title2.bold())
                     Text("A Podfeet App")
                         .font(.subheadline)
                         .foregroundStyle(.primary)   // .secondary fails WCAG AA contrast
@@ -684,13 +701,13 @@ private struct AboutSheet: View {
                         .font(.caption)
                         .foregroundStyle(.primary)   // .secondary fails WCAG AA contrast
                 }
-                .padding(.top, 24)
-                .padding(.bottom, 24)
+                .padding(.top, isShort ? 10 : 24)
+                .padding(.bottom, isShort ? 10 : 24)
 
                 Divider()
 
                 // Links
-                VStack(spacing: 12) {
+                VStack(spacing: isShort ? 8 : 12) {
                     Link(destination: URL(string: "https://timeadder.podfeet.com")!) {
                         Label("Visit timeadder.podfeet.com", systemImage: "safari")
                             .foregroundStyle(.primary)
@@ -721,9 +738,9 @@ private struct AboutSheet: View {
                     }
                 }
                 .padding(.horizontal, 24)
-                .padding(.top, 20)
+                .padding(.top, isShort ? 10 : 20)
 
-                Spacer()
+                Spacer(minLength: 0)
             }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -731,7 +748,9 @@ private struct AboutSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium])
+        // Short screens (iPhone landscape) open at full height so all three links fit at
+        // once without scrolling; taller screens use a comfortable half-sheet.
+        .presentationDetents(isShort ? [.large] : [.medium, .large])
     }
 }
 
