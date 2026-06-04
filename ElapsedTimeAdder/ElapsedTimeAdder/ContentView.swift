@@ -527,12 +527,6 @@ struct ContentView: View {
         }
     }
 
-    private var versionString: String {
-        let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
-        let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
-        return "Version \(v) (build \(b))"
-    }
-
     private var sidebarAboutContent: some View {
         VStack(spacing: 12) {
             Image("PodfeetLogo")
@@ -546,10 +540,6 @@ struct ContentView: View {
 
             Text("A Podfeet App")
                 .font(.subheadline)
-                .foregroundStyle(.primary)   // .secondary fails WCAG AA contrast
-
-            Text(versionString)
-                .font(.caption)
                 .foregroundStyle(.primary)   // .secondary fails WCAG AA contrast
 
             VStack(spacing: 8) {
@@ -676,12 +666,6 @@ private struct AboutSheet: View {
     // so all three links fit at once (no scrolling).
     private var isShort: Bool { verticalSizeClass == .compact }
 
-    private var versionString: String {
-        let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
-        let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
-        return "Version \(v) (build \(b))"
-    }
-
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -696,9 +680,6 @@ private struct AboutSheet: View {
                         .font(isShort ? .headline : .title2.bold())
                     Text("A Podfeet App")
                         .font(.subheadline)
-                        .foregroundStyle(.primary)   // .secondary fails WCAG AA contrast
-                    Text(versionString)
-                        .font(.caption)
                         .foregroundStyle(.primary)   // .secondary fails WCAG AA contrast
                 }
                 .padding(.top, isShort ? 10 : 24)

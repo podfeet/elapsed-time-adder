@@ -61,7 +61,8 @@ final class AccessibilityTests: XCTestCase {
                 return true   // framework/system element → ignore
             default:
                 let raw = issue.element?.elementType.rawValue.description ?? "nil"
-                issues.append("[\(label)] \(issue.compactDescription) (typeRawValue: \(raw))")
+                let text = (issue.element?.value as? String) ?? (issue.element?.label ?? "")
+                issues.append("[\(label)] \(issue.compactDescription) (typeRawValue: \(raw), text: '\(text)')")
                 return true
             }
         }
