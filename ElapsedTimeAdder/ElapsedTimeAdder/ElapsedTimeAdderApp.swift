@@ -17,6 +17,9 @@ struct ElapsedTimeAdderApp: App {
 #endif
         }
 #if os(macOS)
+        // Open at a comfortable size that shows the sidebar + detail; minHeight 400 still
+        // lets the user shrink it. (Without this, a cleared window-frame opens at minimum.)
+        .defaultSize(width: 920, height: 720)
         // Replace the default (broken) "Elapsed Time Adder Help" menu item — which shows
         // "Help isn't available" because no help book is bundled — with a link to the
         // marketing page (which carries the how-to-get-help content).

@@ -154,6 +154,12 @@ struct ContentView: View {
 #endif
             }
             .navigationSplitViewStyle(.balanced)
+#if os(macOS)
+            // Hide the macOS window title (was defaulting to the app name "Elapsed Time
+            // Adder" and showing above the detail column). The wide layout provides its
+            // own title in the sidebar.
+            .toolbar(.hidden, for: .windowToolbar)
+#endif
             .onAppear {
                 if rows.count < 5 {
                     rows.append(contentsOf: (rows.count..<5).map { _ in TimeRow() })
