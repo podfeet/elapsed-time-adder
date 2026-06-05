@@ -242,6 +242,7 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
+				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
 			);
 			outputFileListPaths = (
 			);
@@ -430,6 +431,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Time Adder";
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=macosx*]" = "Elapsed Time Adder";
+				"EXECUTABLE_NAME[sdk=macosx*]" = "Elapsed Time Adder";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -477,6 +479,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Time Adder";
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=macosx*]" = "Elapsed Time Adder";
+				"EXECUTABLE_NAME[sdk=macosx*]" = "Elapsed Time Adder";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -533,6 +536,7 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ElapsedTimeAdder.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ElapsedTimeAdder";
+				"TEST_HOST[sdk=macosx*]" = "$(BUILT_PRODUCTS_DIR)/ElapsedTimeAdder.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Elapsed Time Adder";
 				XROS_DEPLOYMENT_TARGET = 26.4;
 			};
 			name = Debug;
@@ -561,6 +565,7 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ElapsedTimeAdder.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ElapsedTimeAdder";
+				"TEST_HOST[sdk=macosx*]" = "$(BUILT_PRODUCTS_DIR)/ElapsedTimeAdder.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Elapsed Time Adder";
 				VALIDATE_PRODUCT = YES;
 				XROS_DEPLOYMENT_TARGET = 26.4;
 			};
