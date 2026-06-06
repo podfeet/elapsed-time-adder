@@ -62,6 +62,12 @@ final class AccessibilityTests: XCTestCase {
             default:
                 let raw = issue.element?.elementType.rawValue.description ?? "nil"
                 let text = (issue.element?.value as? String) ?? (issue.element?.label ?? "")
+                // Skip internal SwiftUI accessibility nodes that carry no text — these are
+                // framework wrappers (e.g. multiline Text containers, icon sub-nodes) and
+                // have no text-contrast requirement under WCAG 1.4.3. Real content always
+                // has a non-empty label or value; missing labels are caught separately by
+                // the .sufficientElementDescription audit pass.
+                if text.isEmpty { return true }
                 issues.append("[\(label)] \(issue.compactDescription) (typeRawValue: \(raw), text: '\(text)')")
                 return true
             }

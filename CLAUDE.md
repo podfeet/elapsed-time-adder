@@ -92,7 +92,7 @@ SwiftUI's `ScrollView` on iOS delays touch delivery to child views while decidin
 
 Four changes made to improve discoverability for new users:
 
-1. **+/− segmented picker** (`TimeRowView.swift`) — replaced single toggle button with a `Picker(.segmented)` showing `+` and `−`. Both options always visible so users see it's a choice, not just a button. Tinted green (add) or red (subtract).
+1. **+/− segmented picker** (`TimeRowView.swift`) — replaced single toggle button with a `Picker(.segmented)` showing `+` and `−`. Both options always visible so users see it's a choice, not just a button. Tinted green (add) or red (subtract). **macOS only** — `.tint()` is ignored on `Picker(.segmented)` inside `NavigationSplitView`'s detail column on iPadOS (SwiftUI/UIKit interaction limitation); iOS/iPadOS rely solely on the row background color for the add/subtract visual cue. macOS uses contrast-safe dark/light adaptive tint colors (see `TimeRowView.swift` `#if os(macOS)` block). **TODO (future):** to get the same colored picker on iPadOS, `.tint()` won't work — two viable options: (a) `UIViewRepresentable` wrapping `UISegmentedControl` directly and setting `selectedSegmentTintColor`, preserving the accessibility identifiers/labels the tests rely on; (b) replace the `Picker` with two custom SwiftUI `Button`s styled to look like a segmented control. Both are medium complexity.
 
 2. **Color-coded row backgrounds** (`TimeRowView.swift`) — each row has a faint green or red background matching the picker state. The background and picker tint update together when toggled.
 

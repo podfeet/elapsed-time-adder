@@ -10,31 +10,27 @@
 
 ## Changes & things to test
 
+New Features:
+
+- Added a hide keyboard button to make it easier to get to the add row, export, and reset buttons without scrolling in a reduced window area
+- On iOS, changed "a Podfeet App" to be an about button that opens a card giving feedback and other options. On macOS, the card is always expanded 
+- Proper Mac app now has a cleaner layout
+
+Fixed/improved in this build:
+
+- CSV AirDrop should now correctly create only one file.
+- Screen rotation on Pro Max isn't cut off now
+- HH:MM:SS and CSV exports to file with titles `Elapsed Time Adder.txt`  and `Elapsed Time Adder.csv, respectively. 
+- Title row is now correctly provided for both CSV and HH:MM:SS exports
+- Rows with data but no title entered will be called "Row 1", "Row 2", etc. (instead of just "Row"
+- Blank rows are no longer exported, and their row numbers are skipped, so you don't get Row 1, Row 3
+- Commas in text entry don't break CSV export. Now compliant with RFC 4180 open standard for CSV.
+- Negative values are disallowed in single cells, and a single minus sign without values now also throws an error.
+- Explanation of why a spreadsheet is clearer - swapped in "time-of-day" for "absolute" time
+- Icons added to buttons to make it a little more obvious what they do
 - Lowered minimum requirements to iOS 18.6, macOS 15.6, visionOS 2.6
-- Added hide keyboard button to make it easier to get to the add row, export, and reset buttons without scrolling in a reduced window area
 
 
-
-- - 
-
-- New Feature
-
-  - Changed "a Podfeet App" to be an about button that opens a card giving feedback and other options
-
-- Fixed/improved in this build (mostly thanks to Mike Price):
-
-  - CSV AirDrop should now correctly create only one file.
-  - HH:MM:SS and CSV exports to file with titles `Elapsed Time Adder.txt`  and `Elapsed Time Adder.csv`  respectively. 
-  - Title row is now correctly provided for both CSV and HH:MM:SS exports
-  - Rows with data but no title entered will be called "Row 1", "Row 2", etc. (instead of just "Row"
-  - Blank rows are no longer exported, and their row numbers are skipped, so you don't get Row 1, Row 3
-  - Negative values are disallowed in single cells, and a single minus sign without values now also throws an error.
-  - Explanation of why a spreadsheet is clearer - swapped in "time-of-day" for "absolute" time
-  - Changed "a Podfeet App" to be an about button that opens a card giving feedback and other options - test this!
-
-  Mike suggested that the app should have a more obvious look to the Add Another Row button. I hate to have **too** many colors, but that would differentiate it from the two Export buttons. Any ideas would be appreciated.
-
-  
 
 ## New screenshots
 

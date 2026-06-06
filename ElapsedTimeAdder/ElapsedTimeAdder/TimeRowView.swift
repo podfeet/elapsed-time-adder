@@ -58,13 +58,13 @@ struct TimeRowView: View {
     @ViewBuilder private var titleField: some View {
 #if os(iOS)
         TextField("", text: $row.title,
-                  prompt: Text("title").foregroundColor(.primary.opacity(0.5)))
+                  prompt: Text("title").foregroundColor(.primary.opacity(0.6)))
             .textFieldStyle(.roundedBorder)
             .frame(maxWidth: .infinity)
             .accessibilityLabel("Row title")
 #else
         TextField("", text: $row.title,
-                  prompt: Text("title (opt)").foregroundColor(.primary.opacity(0.5)))
+                  prompt: Text("title (opt)").foregroundColor(.primary.opacity(0.6)))
             .textFieldStyle(.roundedBorder)
             .frame(maxWidth: .infinity)
             .accessibilityLabel("Row title")
@@ -115,9 +115,11 @@ struct TimeRowView: View {
             .labelsHidden()
             .frame(width: 64)
 #if os(macOS)
-            .tint(row.isSubtracting ? Color.red.opacity(0.55) : Color.green.opacity(0.55))
-#else
-            .tint(row.isSubtracting ? .red : .green)
+            .tint(row.isSubtracting
+                ? (colorScheme == .dark ? Color(red: 1.0, green: 0.50, blue: 0.50)
+                                        : Color(red: 0.70, green: 0.10, blue: 0.10))
+                : (colorScheme == .dark ? Color(red: 0.36, green: 0.82, blue: 0.53)
+                                        : Color(red: 0.14, green: 0.48, blue: 0.18)))
 #endif
             .accessibilityLabel("Add or subtract this row")
             .accessibilityIdentifier("toggleButton")
