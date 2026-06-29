@@ -17,6 +17,7 @@ struct ContentView: View {
     @State private var showAboutSheet = false
     @State private var isEditing = false
     @State private var draggedRow: TimeRow?
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.colorScheme) private var colorScheme
@@ -55,7 +56,8 @@ struct ContentView: View {
         if isWide {
             // MARK: Wide layout — NavigationSplitView controls the columns so
             // WindowGroup doesn't insert its own blank primary column on iPad.
-            NavigationSplitView {
+            // columnVisibility binding gives macOS its native sidebar toggle button.
+            NavigationSplitView(columnVisibility: $columnVisibility) {
 #if os(iOS)
                 // iPad: About & Feedback pinned to bottom via VStack
                 VStack(spacing: 0) {
@@ -151,15 +153,14 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 #if os(iOS)
                 .toolbar(.hidden, for: .navigationBar)
+#else
+                // Empty title suppresses the "Elapsed Time Adder" window title that macOS
+                // would otherwise show in the toolbar. The sidebar toggle button is kept
+                // by NOT hiding the windowToolbar (hiding it removes the toggle button).
+                .navigationTitle("")
 #endif
             }
             .navigationSplitViewStyle(.balanced)
-#if os(macOS)
-            // Hide the macOS window title (was defaulting to the app name "Elapsed Time
-            // Adder" and showing above the detail column). The wide layout provides its
-            // own title in the sidebar.
-            .toolbar(.hidden, for: .windowToolbar)
-#endif
             .onAppear {
                 if rows.count < 5 {
                     rows.append(contentsOf: (rows.count..<5).map { _ in TimeRow() })
@@ -245,9 +246,6 @@ struct ContentView: View {
                         }
                     }
                 }
-#elseif os(macOS)
-                .toolbar(.hidden, for: .windowToolbar)
-                .ignoresSafeArea(edges: .top)
 #endif
             }
         }
