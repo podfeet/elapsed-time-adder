@@ -2,88 +2,9 @@
 //  ExportHelpers.swift
 //  ElapsedTimeAdder
 //
-//  Formats rows + total for CSV and HH:MM:SS export via share sheet.
+//  Formats rows + total for CSV and HH:MM:SS text, ready to copy to the clipboard.
 
 import Foundation
-#if os(iOS)
-import UIKit
-import LinkPresentation
-#endif
-
-// MARK: - iOS share routing
-
-#if os(iOS)
-/// Provides different data to each share destination:
-/// - AirDrop, Save to Files, iCloud Drive → the named file URL (proper filename + extension)
-/// - Mail, Notes, Messages, etc. → plain text (inserted inline, not as an attachment)
-///
-/// `UIActivityItemSource` is the only iOS API that allows per-destination routing;
-/// SwiftUI's `Transferable`/`ShareLink` picks a single representation for all destinations.
-final class ExportActivityItem: NSObject, UIActivityItemSource {
-    let text: String
-    let fileURL: URL
-
-    init(text: String, fileURL: URL) {
-        self.text = text
-        self.fileURL = fileURL
-    }
-
-    func activityViewControllerPlaceholderItem(
-        _ activityViewController: UIActivityViewController
-    ) -> Any { text }
-
-    func activityViewController(
-        _ activityViewController: UIActivityViewController,
-        itemForActivityType activityType: UIActivity.ActivityType?
-    ) -> Any? {
-        guard let type = activityType else { return text }
-        let id = type.rawValue.lowercased()
-        let wantsFile = type == .airDrop
-            || id.contains("file")
-            || id.contains("document")
-            || id.contains("icloud")
-        return wantsFile ? fileURL : text
-    }
-
-    func activityViewControllerLinkMetadata(
-        _ activityViewController: UIActivityViewController
-    ) -> LPLinkMetadata? {
-        let metadata = LPLinkMetadata()
-        metadata.title = fileURL.lastPathComponent
-        // IMPORTANT: iconProvider supplies the app icon in the iOS share sheet header.
-        // Do NOT remove metadata.url as a substitute — it suppresses the title for
-        // HH:MM:SS exports. iconProvider is the only correct way to show the icon.
-        // This has regressed multiple times; do not touch without testing both exports.
-        if let appIcon = UIImage(named: "AppIcon") {
-            metadata.iconProvider = NSItemProvider(object: appIcon)
-        }
-        return metadata
-    }
-}
-#endif
-
-// MARK: - Export URLs
-
-/// Writes the CSV content to a temporary file named "Elapsed Time Adder Export.csv"
-/// and returns its file URL.  `ShareLink(item: url)` transfers a file URL as an
-/// actual file via AirDrop, preserving the filename exactly.
-func csvExportURL(rows: [TimeRow], total: TimeResult) -> URL {
-    let url = FileManager.default.temporaryDirectory
-        .appendingPathComponent("Elapsed Time Adder Export.csv")
-    try? csvString(rows: rows, total: total)
-        .write(to: url, atomically: true, encoding: .utf8)
-    return url
-}
-
-/// Writes the HH:MM:SS content to a temporary file named
-/// "Elapsed Time Adder Export.txt" and returns its file URL.
-func hhmmssExportURL(rows: [TimeRow], total: TimeResult) -> URL {
-    let url = FileManager.default.temporaryDirectory
-        .appendingPathComponent("Elapsed Time Adder Export.txt")
-    try? hhmmssString(rows: rows, total: total)
-        .write(to: url, atomically: true, encoding: .utf8)
-    return url
-}
 
 // MARK: - CSV
 
@@ -105,7 +26,7 @@ func hhmmssExportURL(rows: [TimeRow], total: TimeResult) -> URL {
 /// - Parameters:
 ///   - rows: The input rows to export.
 ///   - total: The pre-computed ``TimeResult`` total.
-/// - Returns: A newline-separated CSV string ready to pass to a `ShareLink`.
+/// - Returns: A newline-separated CSV string ready to copy to the clipboard.
 func csvString(rows: [TimeRow], total: TimeResult) -> String {
     var lines = ["Title,Hours,Minutes,Seconds"]
     for (index, row) in rows.filter({ !isEmptyRow($0) }).enumerated() {
@@ -138,7 +59,7 @@ func csvString(rows: [TimeRow], total: TimeResult) -> String {
 /// - Parameters:
 ///   - rows: The input rows to export.
 ///   - total: The pre-computed ``TimeResult`` total.
-/// - Returns: A newline-separated string ready to pass to a `ShareLink`.
+/// - Returns: A newline-separated string ready to copy to the clipboard.
 func hhmmssString(rows: [TimeRow], total: TimeResult) -> String {
     var lines = ["Title HH:MM:SS"]
     for (index, row) in rows.filter({ !isEmptyRow($0) }).enumerated() {

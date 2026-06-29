@@ -191,16 +191,28 @@ final class AccessibilityTests: XCTestCase {
         newRowHours.tap()
         newRowHours.typeText("3")
 
-        // 6. Scroll down to reveal Reset and tap it (iOS only; macOS shows it without scroll)
+        // 6. Dismiss keyboard, scroll to reveal Reset, then tap it.
+        //    Keyboard stays up after typing in step 5 — app.swipeUp() hits the keyboard,
+        //    not the list. Tap the in-app keyboard-dismiss toolbar button first, then
+        //    swipe on the table element directly to scroll the list.
 #if os(iOS)
-        app.swipeUp(velocity: .slow)
+        app.toolbars.buttons.firstMatch.tap()
+        let resetBtn = app.buttons["resetButton"]
+        var scrollAttempts = 0
+        while !resetBtn.isHittable && scrollAttempts < 5 {
+            app.tables.firstMatch.swipeUp()
+            scrollAttempts += 1
+        }
 #endif
         app.buttons["resetButton"].tap()
-        // Brief pause to let SwiftUI finish layout after reset — prevents
-        // "Invalid frame dimension" warnings in the accessibility tree.
-        Thread.sleep(forTimeInterval: 0.3)
 
-        // 7. Verify everything is back to the initial state
+        // 7. Poll on the test thread until the row count settles (XCTNSPredicateExpectation
+        // polls on a background thread, which is unreliable for XCUITest tree queries).
+        let deadline = Date().addingTimeInterval(3)
+        while Date() < deadline && app.textFields.matching(hoursPredicate).count != initialRowCount {
+            Thread.sleep(forTimeInterval: 0.1)
+        }
+
         XCTAssertEqual(app.textFields.matching(hoursPredicate).count, initialRowCount,
                        "Row count should be restored after reset")
 

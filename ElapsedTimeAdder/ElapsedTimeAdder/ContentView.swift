@@ -348,98 +348,20 @@ struct ContentView: View {
 
     private var exportButtons: some View {
         HStack(spacing: 8) {
-            ExportButton(
-                getText: { csvString(rows: rows, total: total) },
-                getFileURL: { csvExportURL(rows: rows, total: total) }
-            ) {
-                Label("Export CSV", systemImage: "square.and.arrow.up")
-                    .foregroundStyle(.primary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                    .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
-            }
-            .buttonStyle(.plain)
-
-            ExportButton(
-                getText: { hhmmssString(rows: rows, total: total) },
-                getFileURL: { hhmmssExportURL(rows: rows, total: total) }
-            ) {
-                Label("Export HH:MM:SS", systemImage: "square.and.arrow.up")
-                    .foregroundStyle(.primary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                    .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
-            }
-            .buttonStyle(.plain)
+            CopyButton(getText: { csvString(rows: rows, total: total) }, label: "Copy CSV")
+                .frame(maxWidth: .infinity)
+            CopyButton(getText: { hhmmssString(rows: rows, total: total) }, label: "Copy HH:MM:SS")
+                .frame(maxWidth: .infinity)
         }
     }
 
     // Sidebar variant: stacked vertically, both buttons sized to the widest one, centered
     private var sidebarExportButtons: some View {
         VStack(spacing: 16) {
-#if os(macOS)
-            // macOS shares the named file URL for ALL destinations (chosen tradeoff:
-            // "named file everywhere"). AirDrop / Save to Files / Messages / Freeform get
-            // a proper "Elapsed Time Adder Export.csv/.txt"; Mail & Messages attach it.
-            // macOS NSSharingServicePicker has no reliable per-destination routing, so we
-            // cannot also make Mail inline the text without breaking AirDrop — do NOT try
-            // the dual-representation NSItemProvider again (it makes AirDrop vanish and
-            // leaves Messages/Freeform empty). SharePreview(name) shows the file icon.
-            // Icon choices on macOS, all imperfect (custom SharePreview icons are flaky):
-            //  - title-only SharePreview → generic compass placeholder (worst)
-            //  - no SharePreview → QuickLook thumbnail of a near-empty file = white smudge
-            //  - SharePreview(name, icon: app icon) → small app icon in a white square
-            // Allison prefers the last one. NSApp.applicationIconImage is the app icon.
-            ShareLink(item: csvExportURL(rows: rows, total: total),
-                      preview: SharePreview("Elapsed Time Adder Export.csv",
-                                            icon: Image(nsImage: NSApp.applicationIconImage))) {
-                Label("Export CSV", systemImage: "square.and.arrow.up")
-                    .foregroundStyle(.primary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 24)
-                    .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
-            }
-            .buttonStyle(.plain)
-
-            ShareLink(item: hhmmssExportURL(rows: rows, total: total),
-                      preview: SharePreview("Elapsed Time Adder Export.txt",
-                                            icon: Image(nsImage: NSApp.applicationIconImage))) {
-                Label("Export HH:MM:SS", systemImage: "square.and.arrow.up")
-                    .foregroundStyle(.primary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 24)
-                    .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
-            }
-            .buttonStyle(.plain)
-#else
-            ExportButton(
-                getText: { csvString(rows: rows, total: total) },
-                getFileURL: { csvExportURL(rows: rows, total: total) }
-            ) {
-                Label("Export CSV", systemImage: "square.and.arrow.up")
-                    .foregroundStyle(.primary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 24)
-                    .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
-            }
-            .buttonStyle(.plain)
-
-            ExportButton(
-                getText: { hhmmssString(rows: rows, total: total) },
-                getFileURL: { hhmmssExportURL(rows: rows, total: total) }
-            ) {
-                Label("Export HH:MM:SS", systemImage: "square.and.arrow.up")
-                    .foregroundStyle(.primary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 24)
-                    .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
-            }
-            .buttonStyle(.plain)
-#endif
+            CopyButton(getText: { csvString(rows: rows, total: total) }, label: "Copy CSV")
+                .frame(maxWidth: .infinity)
+            CopyButton(getText: { hhmmssString(rows: rows, total: total) }, label: "Copy HH:MM:SS")
+                .frame(maxWidth: .infinity)
         }
         .frame(width: 320)
         .frame(maxWidth: .infinity)
@@ -608,55 +530,38 @@ struct ContentView: View {
     }
 }
 
-// MARK: - ExportButton
+// MARK: - CopyButton
 
-/// On iOS: presents `UIActivityViewController` so AirDrop / Save to Files receive
-/// a properly named file while Mail, Notes, Messages, etc. receive plain text inline.
-/// On macOS: falls back to `ShareLink` with the file URL (macOS share sheet handles
-/// both destinations appropriately via standard file sharing).
-private struct ExportButton<Label: View>: View {
+/// Copies text to the clipboard and briefly shows "Copied!" feedback.
+private struct CopyButton: View {
     let getText: () -> String
-    let getFileURL: () -> URL
-    @ViewBuilder let label: () -> Label
-
-#if os(iOS)
-    @State private var isPresented = false
+    let label: String
+    @State private var copied = false
+    @Environment(\.colorScheme) private var colorScheme
+    private var buttonOpacity: Double { colorScheme == .dark ? 0.25 : 0.12 }
 
     var body: some View {
-        Button(action: { isPresented = true }) { label() }
-            .sheet(isPresented: $isPresented) {
-                ExportShareSheet(
-                    activityItem: ExportActivityItem(
-                        text: getText(),
-                        fileURL: getFileURL()
-                    )
-                )
-                .presentationDetents([.medium, .large])
-            }
-    }
+        Button {
+            let text = getText()
+#if os(macOS)
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(text, forType: .string)
 #else
-    // macOS export uses direct ShareLink in sidebarExportButtons (not this wrapper)
-    // so the app icon shows automatically in the share popover.
-    var body: some View {
-        let url = getFileURL()
-        ShareLink(item: url, preview: SharePreview(url.lastPathComponent)) {
-            label()
+            UIPasteboard.general.string = text
+#endif
+            copied = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copied = false }
+        } label: {
+            Label(copied ? "Copied!" : label, systemImage: copied ? "checkmark" : "doc.on.doc")
+                .foregroundStyle(.primary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .background(Color.blue.opacity(buttonOpacity), in: RoundedRectangle(cornerRadius: 8))
         }
+        .buttonStyle(.plain)
+        .animation(.easeInOut(duration: 0.2), value: copied)
     }
-#endif
 }
-
-#if os(iOS)
-private struct ExportShareSheet: UIViewControllerRepresentable {
-    let activityItem: ExportActivityItem
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: [activityItem], applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
-}
-#endif
 
 // MARK: - About sheet
 
