@@ -104,7 +104,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Run Script"
-               scriptText = "BUILD_NUMBER=$(date +&quot;%y%m%d%H%M&quot;)&#10;cd &quot;$SRCROOT&quot;&#10;agvtool new-version -all $BUILD_NUMBER&#10;">
+               scriptText = "BUILD_NUMBER=$(date +&quot;%y%m%d%H%M&quot;)&#10;cd &quot;${SRCROOT}&quot; || exit 1&#10;/usr/bin/agvtool new-version -all &quot;$BUILD_NUMBER&quot;&#10;">
                <EnvironmentBuildable>
                   <BuildableReference
                      BuildableIdentifier = "primary"
