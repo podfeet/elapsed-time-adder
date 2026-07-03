@@ -11,6 +11,11 @@ struct TimeRowView: View {
     var isLast: Bool = false
     var onAddRow: (() -> Void)? = nil
     var isEditMode: Bool = false
+    // Reports the title field's actual rendered width on every layout pass. ContentView
+    // uses this as the direct signal for collapsing the sidebar — once the field is
+    // pinned at Self.titleFieldMinWidth (its floor), it's under real compression
+    // pressure, regardless of window/sidebar/detail math computed elsewhere.
+    var onTitleWidthChange: ((CGFloat) -> Void)? = nil
     @Environment(\.colorScheme) private var colorScheme
 
     private var hoursValid:   Bool { isValidTimeInput(row.hours) }
@@ -30,7 +35,12 @@ struct TimeRowView: View {
                 // Normal mode: original single-line layout
                 HStack(spacing: 8) {
                     titleField
+                    // Higher priority than titleField (which has default priority 0):
+                    // when the row doesn't fit, the HStack takes space from titleField
+                    // first (down to its own minWidth floor) rather than compressing
+                    // the Hrs/Min/Sec fields and the +/- picker.
                     timeFieldsRow
+                        .layoutPriority(1)
                 }
             }
 
@@ -55,19 +65,27 @@ struct TimeRowView: View {
         )
     }
 
+    // Roughly the width of the "title (opt)" placeholder — the title field can still
+    // shrink and grow with the window, but never collapse to a sliver. On macOS/iPad,
+    // once the whole row can't fit even at this minimum, ContentView collapses the
+    // sidebar instead of shrinking the field further.
+    static let titleFieldMinWidth: CGFloat = 90
+
     @ViewBuilder private var titleField: some View {
 #if os(iOS)
         TextField("", text: $row.title,
                   prompt: Text("title").foregroundColor(.primary.opacity(0.6)))
             .textFieldStyle(.roundedBorder)
-            .frame(maxWidth: .infinity)
+            .frame(minWidth: Self.titleFieldMinWidth, maxWidth: .infinity)
             .accessibilityLabel("Row title")
+            .modifier(TitleWidthReporter(onChange: onTitleWidthChange))
 #else
         TextField("", text: $row.title,
                   prompt: Text("title (opt)").foregroundColor(.primary.opacity(0.6)))
             .textFieldStyle(.roundedBorder)
-            .frame(maxWidth: .infinity)
+            .frame(minWidth: Self.titleFieldMinWidth, maxWidth: .infinity)
             .accessibilityLabel("Row title")
+            .modifier(TitleWidthReporter(onChange: onTitleWidthChange))
 #endif
     }
 
@@ -129,6 +147,26 @@ struct TimeRowView: View {
     private func fieldBorder(valid: Bool) -> some View {
         RoundedRectangle(cornerRadius: 6)
             .stroke(valid ? Color.clear : Color.red, lineWidth: 2)
+    }
+}
+
+// Applies a GeometryReader-based width report only when onChange is non-nil — no
+// measurement overhead on rows/platforms that don't need it (e.g. iPhone's List rows).
+private struct TitleWidthReporter: ViewModifier {
+    let onChange: ((CGFloat) -> Void)?
+
+    func body(content: Content) -> some View {
+        if let onChange {
+            content.background(
+                GeometryReader { geo in
+                    Color.clear
+                        .onAppear { onChange(geo.size.width) }
+                        .onChange(of: geo.size.width) { _, newWidth in onChange(newWidth) }
+                }
+            )
+        } else {
+            content
+        }
     }
 }
 
