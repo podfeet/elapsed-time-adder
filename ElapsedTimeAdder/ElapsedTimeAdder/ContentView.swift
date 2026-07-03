@@ -18,6 +18,38 @@ struct ContentView: View {
     @State private var isEditing = false
     @State private var draggedRow: TimeRow?
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
+#if os(macOS)
+    // Tracks whether the sidebar is currently hidden because OUR narrow-width logic
+    // closed it (vs. the user manually clicking the sidebar toggle button). Only an
+    // auto-collapse gets auto-reopened later — a manual hide is respected even if the
+    // window is widened back out.
+    @State private var isSidebarAutoCollapsed = false
+    // Disarmed by any manual toggle (in either direction) so we stop fighting the
+    // user; re-armed once the title field is comfortably wide again, ready for the
+    // next narrow→wide cycle.
+    @State private var autoCollapseArmed = true
+    // Set right before WE change columnVisibility, so the onChange below can tell our
+    // own writes apart from the user clicking the native sidebar toggle button.
+    @State private var isProgrammaticVisibilityChange = false
+    // Continuously-updated window width (measured via a GeometryReader on the whole
+    // NavigationSplitView) and a snapshot of it taken at the moment we auto-collapse.
+    // Reopening MUST key off window width, not title-field width: collapsing the
+    // sidebar immediately widens the detail column, which immediately widens the
+    // title field — if reopening also watched title width, that swing would reopen
+    // the sidebar right away, which narrows the title field again, which collapses
+    // it again... an infinite loop (this is what caused the SIGTERM hang). Window
+    // width is unaffected by whether the sidebar is shown, so it can't self-trigger.
+    @State private var lastKnownWindowWidth: CGFloat = 0
+    @State private var windowWidthAtCollapse: CGFloat?
+#endif
+#if os(iOS)
+    // Drives the iPhone List's native reorder/delete controls. Custom onDrag/onDrop
+    // (used on the wide/macOS ScrollView layout) doesn't work for same-List reordering
+    // on iOS: it competes with List's own vertical scroll-pan gesture, so the drag
+    // preview lifts but the drop never registers. .onMove is the only reliable
+    // mechanism for reordering rows inside a List.
+    @State private var editMode: EditMode = .inactive
+#endif
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.colorScheme) private var colorScheme
@@ -50,6 +82,89 @@ struct ContentView: View {
     private func deleteRows(at offsets: IndexSet) {
         rows.remove(atOffsets: offsets)
         if rows.count < 2 { rows.append(contentsOf: (rows.count..<2).map { _ in TimeRow() }) }
+    }
+
+    private func moveRows(from source: IndexSet, to destination: Int) {
+        rows.move(fromOffsets: source, toOffset: destination)
+    }
+
+#if os(macOS)
+    private func setColumnVisibility(_ newValue: NavigationSplitViewVisibility) {
+        isProgrammaticVisibilityChange = true
+        columnVisibility = newValue
+    }
+
+    // Any columnVisibility change we didn't just make ourselves came from the user
+    // clicking the native sidebar toggle button. Treat that as an explicit override:
+    // stop auto-managing until the title field is comfortably wide again.
+    private func handleManualVisibilityChange() {
+        if isProgrammaticVisibilityChange {
+            isProgrammaticVisibilityChange = false
+        } else {
+            isSidebarAutoCollapsed = false
+            autoCollapseArmed = false
+            windowWidthAtCollapse = nil
+        }
+    }
+
+    // Collapse decision only — direct signal from TimeRowView: the title field's
+    // actual rendered width. It's floored at TimeRowView.titleFieldMinWidth via
+    // .frame(minWidth:), so once it's reporting a value at (or pinned to) that
+    // floor, it's under real compression pressure. This never oscillates on its
+    // own: collapsing is a one-way transition guarded by `columnVisibility !=
+    // .detailOnly`, and re-arming only happens once the field is comfortably wide
+    // WITH the sidebar still visible (i.e. before any collapse), not as a result
+    // of collapsing.
+    private func handleTitleWidthChange(_ titleWidth: CGFloat) {
+        // +2pt tolerance for sub-pixel rounding during live resize.
+        let isNarrow = titleWidth <= TimeRowView.titleFieldMinWidth + 2
+        if isNarrow {
+            guard autoCollapseArmed, columnVisibility != .detailOnly else { return }
+            setColumnVisibility(.detailOnly)
+            isSidebarAutoCollapsed = true
+            windowWidthAtCollapse = lastKnownWindowWidth
+        } else if columnVisibility == .all {
+            autoCollapseArmed = true
+        }
+    }
+
+    // Reopen decision only — keyed off total window width, which collapsing the
+    // sidebar does NOT change (only how that width is split between columns
+    // changes). Reopens once the window is a bit wider than it was at the moment
+    // of collapse — self-calibrating, no guessed pixel threshold needed — and only
+    // for a collapse WE caused (isSidebarAutoCollapsed).
+    private func handleWindowWidthChange(_ windowWidth: CGFloat) {
+        lastKnownWindowWidth = windowWidth
+        guard isSidebarAutoCollapsed, columnVisibility == .detailOnly,
+              let widthAtCollapse = windowWidthAtCollapse else { return }
+        if windowWidth > widthAtCollapse + 20 {
+            setColumnVisibility(.all)
+            isSidebarAutoCollapsed = false
+            windowWidthAtCollapse = nil
+        }
+    }
+#endif
+
+    // nil on iPad — this auto-collapse behavior is scoped to macOS only, per what
+    // was asked. TimeRowView's TitleWidthReporter modifier is a no-op when nil, so
+    // no GeometryReader/measurement overhead is added on iPad or iPhone.
+    private var titleWidthHandler: ((CGFloat) -> Void)? {
+#if os(macOS)
+        handleTitleWidthChange
+#else
+        nil
+#endif
+    }
+
+    // VoiceOver-only path: dragging isn't accessible to VoiceOver, so each row also
+    // exposes "Move up"/"Move down" custom accessibility actions as an equivalent way
+    // to reorder rows via the rotor, matching how Apple's own apps (Mail, Reminders)
+    // pair a drag handle with rotor-based reordering actions.
+    private func moveRow(_ row: TimeRow, by offset: Int) {
+        guard let index = rows.firstIndex(where: { $0.id == row.id }) else { return }
+        let destination = index + offset
+        guard rows.indices.contains(destination) else { return }
+        rows.move(fromOffsets: IndexSet([index]), toOffset: offset > 0 ? destination + 1 : destination)
     }
 
     var body: some View {
@@ -122,7 +237,8 @@ struct ContentView: View {
                                 }
                                 TimeRowView(row: row,
                                             isLast: row.id == rows.last?.id,
-                                            onAddRow: { rows.append(TimeRow()) })
+                                            onAddRow: { rows.append(TimeRow()) },
+                                            onTitleWidthChange: titleWidthHandler)
                                     .frame(maxWidth: .infinity)
                                 if isEditing {
                                     Image(systemName: "line.3.horizontal")
@@ -166,6 +282,23 @@ struct ContentView: View {
                     rows.append(contentsOf: (rows.count..<5).map { _ in TimeRow() })
                 }
             }
+#if os(macOS)
+            .onChange(of: columnVisibility) { _, _ in
+                handleManualVisibilityChange()
+            }
+            // Whole-window width, for the reopen decision only (see
+            // handleWindowWidthChange). .background(GeometryReader) doesn't affect
+            // layout — it's given the same size as the view it's attached to.
+            .background(
+                GeometryReader { geo in
+                    Color.clear
+                        .onAppear { handleWindowWidthChange(geo.size.width) }
+                        .onChange(of: geo.size.width) { _, newWidth in
+                            handleWindowWidthChange(newWidth)
+                        }
+                }
+            )
+#endif
 
         } else {
             // MARK: Narrow layout — single column (iPhone)
@@ -180,39 +313,16 @@ struct ContentView: View {
                         .padding(.horizontal, 10)
                         .plainRow(top: 4, bottom: 0)
                     ForEach(rows) { row in
-                        HStack(spacing: 8) {
-                            if isEditing {
-                                Button {
-                                    if let index = rows.firstIndex(where: { $0.id == row.id }) {
-                                        deleteRows(at: IndexSet([index]))
-                                    }
-                                } label: {
-                                    Image(systemName: "minus.circle.fill")
-                                        .foregroundStyle(.red)
-                                        .font(.title2)
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("Delete row")
-                                .transition(.move(edge: .leading).combined(with: .opacity))
-                            }
-                            TimeRowView(row: row,
-                                        isLast: row.id == rows.last?.id,
-                                        onAddRow: { rows.append(TimeRow()) },
-                                        isEditMode: isEditing)
-                                .frame(maxWidth: .infinity)
-                            if isEditing {
-                                Image(systemName: "line.3.horizontal")
-                                    .foregroundStyle(.secondary)
-                                    .font(.title3)
-                                    .accessibilityLabel("Drag to reorder")
-                                    .transition(.move(edge: .trailing).combined(with: .opacity))
-                            }
-                        }
-                        .plainRow(top: 4, bottom: 4)
-                        .modifier(RowReorderModifier(
-                            isActive: isEditing, row: row,
-                            rows: $rows, draggedRow: $draggedRow))
+                        TimeRowView(row: row,
+                                    isLast: row.id == rows.last?.id,
+                                    onAddRow: { rows.append(TimeRow()) },
+                                    isEditMode: isEditing)
+                            .plainRow(top: 4, bottom: 4)
+                            .accessibilityAction(named: "Move up") { moveRow(row, by: -1) }
+                            .accessibilityAction(named: "Move down") { moveRow(row, by: 1) }
                     }
+                    .onDelete(perform: deleteRows)
+                    .onMove(perform: moveRows)
                     totalSummarySection
                         .plainRow()
                     HStack(spacing: 8) {
@@ -233,6 +343,7 @@ struct ContentView: View {
                 .scrollContentBackground(.hidden)
                 .navigationTitle("Elapsed Time Adder")
 #if os(iOS)
+                .environment(\.editMode, $editMode)
                 .toolbar(.hidden, for: .navigationBar)
                 .toolbar {
                     ToolbarItem(placement: .keyboard) {
@@ -271,7 +382,12 @@ struct ContentView: View {
     // with Add Row as a "row action"; the export buttons use the share-arrow icon instead.
     private var editRowsButton: some View {
         Button {
-            withAnimation { isEditing.toggle() }
+            withAnimation {
+                isEditing.toggle()
+#if os(iOS)
+                editMode = isEditing ? .active : .inactive
+#endif
+            }
         } label: {
             Label(isEditing ? "Done" : "Edit Rows",
                   systemImage: isEditing ? "checkmark.circle.fill" : "pencil")
@@ -406,6 +522,9 @@ struct ContentView: View {
         Button {
             rows = (0..<(isWide ? 5 : 2)).map { _ in TimeRow() }
             isEditing = false
+#if os(iOS)
+            editMode = .inactive
+#endif
         } label: {
             Text("Reset")
                 .foregroundStyle(.primary)

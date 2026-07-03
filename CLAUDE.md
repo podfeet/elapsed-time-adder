@@ -18,6 +18,11 @@ The original web app (HTML/CSS/JS/jQuery/Bootstrap) lives in `web/` for referenc
 
 ---
 
+## Working agreement with Claude Code
+- **Never run `xcodebuild`** — not `build`, not `test`, not even as a quick "does it compile" check. Allison builds and tests herself in Xcode with a single button press; running `xcodebuild` from the CLI burns tokens on long tool output for something she can do instantly and for free. After making a code change, stop at the edit and tell her it's ready to build/test — don't proactively verify via the command line. If genuinely unsure whether an edit compiles, say so explicitly instead of silently building to check.
+
+---
+
 ## Key decisions made
 - **SwiftUI multiplatform** (not WKWebView wrapper) — native app, single codebase for iOS + macOS
 - **Single +/− toggle button per row** (not per field) — the whole row is positive or negative — implemented as a segmented Picker showing `+` / `−`
