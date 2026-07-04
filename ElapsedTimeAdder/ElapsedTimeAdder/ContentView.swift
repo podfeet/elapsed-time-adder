@@ -6,17 +6,45 @@
 //
 
 import SwiftUI
-import UniformTypeIdentifiers
 #if os(macOS)
 import AppKit
 #endif
+
+// Pure decision logic for ContentView.isWide, pulled out to a standalone function
+// so it's unit-testable directly with UserInterfaceSizeClass values — no simulator
+// device rotation required. Automating real rotation via XCUIDevice.shared.orientation
+// in a UI test proved unreliable (it produced a false failure even when the app was
+// visually confirmed correct — see LayoutTests.swift and AccessibilityTests.swift's
+// git history), and it's testing the same boolean decision either way. Requiring BOTH
+// size classes to be .regular is what matters: a Plus/Max iPhone in landscape reports
+// horizontal .regular (like an iPad) but vertical .compact, so checking horizontal
+// alone would wrongly pick the wide/sidebar layout there.
+func isWideLayout(horizontalSizeClass: UserInterfaceSizeClass?, verticalSizeClass: UserInterfaceSizeClass?) -> Bool {
+    horizontalSizeClass == .regular && verticalSizeClass == .regular
+}
 
 struct ContentView: View {
     @State private var rows: [TimeRow] = [TimeRow(), TimeRow()]
     @State private var showSpreadsheetNote = false
     @State private var showAboutSheet = false
     @State private var isEditing = false
+    // Wide-layout (macOS/iPad) row reorder — driven by a plain DragGesture on each
+    // row's drag handle rather than SwiftUI's onDrag/onDrop, after repeated
+    // regressions tuning the latter (system drag-preview ghost, invisible rows when
+    // performDrop didn't fire, timing races clearing that state). A DragGesture is
+    // fully self-contained: we track the offset and decide swaps ourselves, with no
+    // system drag session and no ambiguity about when a "drop" occurred.
     @State private var draggedRow: TimeRow?
+    @State private var dragOffset: CGFloat = 0
+    // The dragged row's array index at the moment the drag began — see
+    // handleRowDragChanged for why the target slot is derived from this plus the
+    // raw translation, rather than adjusting dragOffset itself after each swap.
+    @State private var draggingStartIndex: Int?
+    // Measured once from an actual row (inline GeometryReader in the ForEach below)
+    // rather than guessed — hardcoded row-height constants have been wrong every
+    // time they were tried elsewhere in this file. Rows are uniform height, so any
+    // one row's measurement is valid for all of them.
+    @State private var rowHeight: CGFloat = 0
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 #if os(macOS)
     // Tracks whether the sidebar is currently hidden because OUR narrow-width logic
@@ -54,15 +82,14 @@ struct ContentView: View {
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.colorScheme) private var colorScheme
 
-    // Wide (sidebar) layout = real iPad full-screen or Mac only. Require BOTH size
-    // classes to be .regular: a Plus/Max iPhone in landscape reports horizontal .regular
-    // (like an iPad) but vertical .compact, so it would wrongly pick the iPad layout if we
-    // checked horizontal alone. macOS always uses the wide layout.
+    // Wide (sidebar) layout = real iPad full-screen or Mac only. macOS always uses
+    // the wide layout; iOS defers to isWideLayout (see its own doc comment for why
+    // that's a standalone function rather than inlined here).
     private var isWide: Bool {
 #if os(macOS)
         true
 #else
-        horizontalSizeClass == .regular && verticalSizeClass == .regular
+        isWideLayout(horizontalSizeClass: horizontalSizeClass, verticalSizeClass: verticalSizeClass)
 #endif
     }
     private var buttonOpacity: Double { colorScheme == .dark ? 0.25 : 0.12 }
@@ -86,6 +113,71 @@ struct ContentView: View {
 
     private func moveRows(from source: IndexSet, to destination: Int) {
         rows.move(fromOffsets: source, toOffset: destination)
+    }
+
+    // Wide-layout drag-to-reorder: called continuously as the drag handle moves.
+    // Swap decisions are made relative to the row's CURRENT slot (not recomputed
+    // from scratch against the drag's start position each time), using a 60% —
+    // not 50% — threshold in either direction. That's deliberate hysteresis: a
+    // plain symmetric midpoint has no gap between the forward- and
+    // backward-triggering points, so ordinary cursor jitter sitting right at that
+    // exact midpoint would flip the rounded target back and forth, firing
+    // rows.move repeatedly (the "twitchy" flutter). Requiring 60% past center to
+    // swap means that immediately after a swap, the row sits ~40% into its new
+    // slot — comfortably inside the dead zone — so small jitter can't immediately
+    // re-trigger a reverse swap.
+    private func handleRowDragChanged(row: TimeRow, translationHeight: CGFloat) {
+        if draggedRow?.id != row.id {
+            draggedRow = row
+            draggingStartIndex = rows.firstIndex(where: { $0.id == row.id })
+        }
+        dragOffset = translationHeight
+
+        guard rowHeight > 0,
+              let startIndex = draggingStartIndex,
+              let currentIndex = rows.firstIndex(where: { $0.id == row.id })
+        else { return }
+
+        let offsetFromCurrentSlot = dragOffset - CGFloat(currentIndex - startIndex) * rowHeight
+        let threshold = rowHeight * 0.6
+
+        // Deliberately NOT wrapped in withAnimation: visualDragOffset's math assumes
+        // the array reflow (siblings moving into their new slots) happens instantly,
+        // so it can compensate synchronously and keep the dragged row's total
+        // apparent position exactly equal to dragOffset (raw cursor tracking) at
+        // every moment. Animating this reflow spreads it over ~0.3s while the offset
+        // compensation snaps immediately — a mismatch that made dragging feel
+        // jerky. Only the final settle in handleRowDragEnded is animated, since
+        // there's no continuous tracking to stay in sync with by then.
+        if offsetFromCurrentSlot > threshold, currentIndex < rows.count - 1 {
+            rows.move(fromOffsets: IndexSet([currentIndex]), toOffset: currentIndex + 2)
+        } else if offsetFromCurrentSlot < -threshold, currentIndex > 0 {
+            rows.move(fromOffsets: IndexSet([currentIndex]), toOffset: currentIndex - 1)
+        }
+    }
+
+    private func handleRowDragEnded() {
+        draggedRow = nil
+        draggingStartIndex = nil
+        withAnimation {
+            dragOffset = 0
+        }
+    }
+
+    // The visual .offset(y:) applied to the row being dragged. This is NOT just
+    // dragOffset directly: once a swap happens, the row's actual array position
+    // already moves (ForEach's reflow, since rows.move changed its index) —
+    // applying the full raw dragOffset on TOP of that double-counts the movement,
+    // since the reflow already accounts for whole-row-height steps. This subtracts
+    // out however much the index has already shifted since drag start, leaving only
+    // the sub-row-height remainder needed for smooth 1:1 cursor tracking within the
+    // current slot. Same offsetFromCurrentSlot quantity as in handleRowDragChanged.
+    private func visualDragOffset(for row: TimeRow) -> CGFloat {
+        guard draggedRow?.id == row.id, rowHeight > 0,
+              let startIndex = draggingStartIndex,
+              let currentIndex = rows.firstIndex(where: { $0.id == row.id })
+        else { return 0 }
+        return dragOffset - CGFloat(currentIndex - startIndex) * rowHeight
     }
 
 #if os(macOS)
@@ -217,6 +309,8 @@ struct ContentView: View {
 #endif
             } detail: {
                 ScrollView {
+                    // Named so the row-reorder DragGesture below can measure translation
+                    // against a frame that doesn't move — see the gesture's comment for why.
                     VStack(spacing: 16) {
                         columnHeaders
                             .padding(.horizontal, 10)
@@ -241,16 +335,48 @@ struct ContentView: View {
                                             onTitleWidthChange: titleWidthHandler)
                                     .frame(maxWidth: .infinity)
                                 if isEditing {
+                                    // Drag handle only — the gesture is scoped to this icon so
+                                    // dragging can't interfere with the row's text fields/picker.
                                     Image(systemName: "line.3.horizontal")
                                         .foregroundStyle(.secondary)
                                         .font(.title3)
                                         .padding(.trailing, 4)
+                                        .contentShape(Rectangle())
+                                        .gesture(
+                                            // Named space (see the VStack above), NOT .local: .local
+                                            // measures translation relative to this icon's OWN frame,
+                                            // which relocates the instant a swap fires (its row moves
+                                            // to a new position) — so mid-gesture, the reference frame
+                                            // itself would jump, corrupting the reported translation
+                                            // with a spurious jolt on every swap. That's what caused
+                                            // the frantic up/down jumping. A named space anchored to
+                                            // the outer VStack (which doesn't move) keeps translation a
+                                            // pure function of actual cursor movement throughout.
+                                            DragGesture(minimumDistance: 2, coordinateSpace: .named("rowReorderSpace"))
+                                                .onChanged { value in
+                                                    handleRowDragChanged(row: row,
+                                                                         translationHeight: value.translation.height)
+                                                }
+                                                .onEnded { _ in handleRowDragEnded() }
+                                        )
                                         .transition(.move(edge: .trailing).combined(with: .opacity))
                                 }
                             }
-                            .modifier(RowReorderModifier(
-                                isActive: isEditing, row: row,
-                                rows: $rows, draggedRow: $draggedRow))
+                            // Rows are uniform height, so measuring any single one is enough —
+                            // reported once on appear since it never changes afterward.
+                            .background(
+                                GeometryReader { geo in
+                                    Color.clear.onAppear { rowHeight = geo.size.height }
+                                }
+                            )
+                            // Only the row actually being dragged follows the gesture directly
+                            // (no animation — 1:1 tracking with the finger/cursor); its siblings
+                            // reflow instantly too, via the (deliberately unanimated) rows.move in
+                            // handleRowDragChanged. zIndex keeps the dragged row drawn above its
+                            // neighbors while it's between slots. See visualDragOffset for why
+                            // this isn't just the raw dragOffset.
+                            .offset(y: visualDragOffset(for: row))
+                            .zIndex(draggedRow?.id == row.id ? 1 : 0)
                         }
                         totalSummarySection
                         HStack(spacing: 8) {
@@ -265,6 +391,7 @@ struct ContentView: View {
                     .padding()
                     .frame(maxWidth: 560)
                     .frame(maxWidth: .infinity, alignment: .center)
+                    .coordinateSpace(.named("rowReorderSpace"))
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 #if os(iOS)
@@ -771,60 +898,6 @@ private extension View {
             .listRowSeparator(.hidden)
             .listRowBackground(Color.clear)
             .listRowInsets(EdgeInsets(top: top, leading: 16, bottom: bottom, trailing: 16))
-    }
-}
-
-// MARK: - Row reorder (wide layout)
-
-/// Applies onDrag/onDrop ONLY when editing — no drag modifiers at all in normal mode.
-/// Applying onDrag to every List row unconditionally breaks app-level swipe hit-testing
-/// (XCUITest "Unable to find hit point for Application") and lets users accidentally drag
-/// rows when not in edit mode. Same conditional-modifier pattern as TabToAddRowModifier.
-private struct RowReorderModifier: ViewModifier {
-    let isActive: Bool
-    let row: TimeRow
-    @Binding var rows: [TimeRow]
-    @Binding var draggedRow: TimeRow?
-
-    func body(content: Content) -> some View {
-        if isActive {
-            content
-                .onDrag {
-                    draggedRow = row
-                    return NSItemProvider(object: row.id.uuidString as NSString)
-                }
-                .onDrop(of: [UTType.text], delegate: RowDropDelegate(
-                    targetRow: row, rows: $rows, draggedRow: $draggedRow))
-        } else {
-            content
-        }
-    }
-}
-
-private struct RowDropDelegate: DropDelegate {
-    let targetRow: TimeRow
-    @Binding var rows: [TimeRow]
-    @Binding var draggedRow: TimeRow?
-
-    func performDrop(info: DropInfo) -> Bool {
-        draggedRow = nil
-        return true
-    }
-
-    func dropEntered(info: DropInfo) {
-        guard let dragged = draggedRow,
-              dragged.id != targetRow.id,
-              let fromIndex = rows.firstIndex(where: { $0.id == dragged.id }),
-              let toIndex   = rows.firstIndex(where: { $0.id == targetRow.id })
-        else { return }
-        withAnimation {
-            rows.move(fromOffsets: IndexSet([fromIndex]),
-                      toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex)
-        }
-    }
-
-    func dropUpdated(info: DropInfo) -> DropProposal? {
-        DropProposal(operation: .move)
     }
 }
 

@@ -4,6 +4,9 @@
 //
 
 import XCTest
+#if os(iOS)
+import UIKit
+#endif
 
 final class AccessibilityTests: XCTestCase {
 
@@ -193,15 +196,33 @@ final class AccessibilityTests: XCTestCase {
 
         // 6. Dismiss keyboard, scroll to reveal Reset, then tap it.
         //    Keyboard stays up after typing in step 5 — app.swipeUp() hits the keyboard,
-        //    not the list. Tap the in-app keyboard-dismiss toolbar button first, then
-        //    swipe on the table element directly to scroll the list.
+        //    not the content. iPhone (narrow layout, List) and iPad (wide layout,
+        //    ScrollView) need different handling: iPad has no keyboard-dismiss toolbar
+        //    button at all (that's iPhone/List-only — the wide layout's detail column
+        //    only hides the navigation bar toolbar, it never adds a keyboard one), and
+        //    on iPad app.toolbars.buttons picks up the software keyboard's own
+        //    toolbar-like chrome instead of anything of ours, so querying it fails
+        //    outright ("No matches found").
 #if os(iOS)
-        app.toolbars.buttons.firstMatch.tap()
         let resetBtn = app.buttons["resetButton"]
-        var scrollAttempts = 0
-        while !resetBtn.isHittable && scrollAttempts < 5 {
-            app.tables.firstMatch.swipeUp()
-            scrollAttempts += 1
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            // Tap a safe, non-interactive spot near the top of the window to dismiss
+            // the keyboard, then swipe the (ScrollView-backed) detail column directly.
+            app.windows.firstMatch
+                .coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.05))
+                .tap()
+            var scrollAttempts = 0
+            while !resetBtn.isHittable && scrollAttempts < 5 {
+                app.scrollViews.firstMatch.swipeUp()
+                scrollAttempts += 1
+            }
+        } else {
+            app.toolbars.buttons.firstMatch.tap()
+            var scrollAttempts = 0
+            while !resetBtn.isHittable && scrollAttempts < 5 {
+                app.tables.firstMatch.swipeUp()
+                scrollAttempts += 1
+            }
         }
 #endif
         app.buttons["resetButton"].tap()
