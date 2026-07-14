@@ -133,6 +133,7 @@ Four changes made to improve discoverability for new users:
 ---
 
 ## Key gotchas discovered
+- **Archive build-number auto-increment requires `VERSIONING_SYSTEM = apple-generic`**: the Archive action has a pre-action script (in `ElapsedTimeAdder.xcscheme`) that runs `agvtool new-version -all $(date +"%y%m%d%H%M")` to stamp a date-based build number before every archive. `agvtool` silently no-ops if the project's Versioning System build setting isn't set to `apple-generic` — the script "succeeds" with no error, but `CURRENT_PROJECT_VERSION` never changes. Fixed by adding `VERSIONING_SYSTEM = "apple-generic";` to the **project-level** Debug/Release build configs in `project.pbxproj` (all targets inherit it, no per-target duplication needed). If archiving ever stops bumping the build number again, check this setting hasn't been removed/overridden.
 - **Always run tests on an iPhone simulator** — running on "My Mac" destination causes all UI/accessibility tests to report 0 elements found (macOS accessibility tree is different)
 - **Parallel UI tests**: scheme has `parallelizable = YES` so Xcode spawns 3 simulator clones; each clone shows the app + a no-icon test runner process — both are normal
 - **project.pbxproj uses `PBXFileSystemSynchronizedRootGroup`** — no need to manually register new `.swift` files; Xcode auto-includes everything in the target folders
