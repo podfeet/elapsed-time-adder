@@ -484,18 +484,14 @@ struct ContentView: View {
 #if os(iOS)
                 .environment(\.editMode, $editMode)
                 .toolbar(.hidden, for: .navigationBar)
-                .toolbar {
-                    ToolbarItem(placement: .keyboard) {
-                        Button {
-                            UIApplication.shared.sendAction(
-                                #selector(UIResponder.resignFirstResponder),
-                                to: nil, from: nil, for: nil
-                            )
-                        } label: {
-                            Image(systemName: "keyboard.chevron.compact.down")
-                        }
-                    }
-                }
+                // No custom keyboard-toolbar dismiss button here (see issue #72): it rides
+                // above the keyboard as an input accessory view, and iOS's automatic
+                // scroll-focused-field-into-view logic accounts for the keyboard's height
+                // but not the accessory's extra height on top of it — so a lower row could
+                // get scrolled to sit exactly where the accessory (not the keyboard) covers
+                // it, making it look editable but be untappable. Interactive drag-to-dismiss
+                // is the standard iOS gesture and doesn't add any view for that math to miss.
+                .scrollDismissesKeyboard(.interactively)
 #endif
             }
         }
