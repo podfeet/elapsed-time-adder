@@ -104,7 +104,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Run Script"
-               scriptText = "BUILD_NUMBER=$(date +&quot;%y%m%d%H%M&quot;)&#10;cd &quot;${SRCROOT}&quot; || exit 1&#10;/usr/bin/agvtool new-version -all &quot;$BUILD_NUMBER&quot;&#10;">
+               scriptText = "BUILD_NUMBER=$(date +&quot;%y%m%d%H%M&quot;)&#10;cd &quot;${SRCROOT}&quot; || exit 1&#10;sed -i &apos;&apos; &quot;s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = ${BUILD_NUMBER};/g&quot; ElapsedTimeAdder.xcodeproj/project.pbxproj&#10;">
                <EnvironmentBuildable>
                   <BuildableReference
                      BuildableIdentifier = "primary"
