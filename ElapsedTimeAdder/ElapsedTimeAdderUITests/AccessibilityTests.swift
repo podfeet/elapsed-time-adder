@@ -16,6 +16,23 @@ final class AccessibilityTests: XCTestCase {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launch()
+#if os(macOS)
+        // macOS persists the window frame across launches. If a prior manual test session
+        // left the window narrow enough to trip ContentView's own auto-collapse logic
+        // (handleTitleWidthChange), the sidebar — and everything in it, like
+        // spreadsheetButton — starts hidden and never got a chance to auto-reopen before
+        // these tests ran. Every test here assumes the sidebar starts visible, so restore
+        // it once, up front, rather than resizing the window or special-casing each test.
+        let showSidebarButton = app.buttons.matching(NSPredicate(format: "label == 'Show Sidebar'")).firstMatch
+        if showSidebarButton.exists {
+            showSidebarButton.tap()
+            // The sidebar reveal is animated — without waiting, a test whose very first
+            // line queries a sidebar-only element (e.g. spreadsheetButton) can race the
+            // animation and see "does not exist" even though the tap registered. Block
+            // here until sidebar content is actually in the accessibility tree.
+            _ = app.buttons["spreadsheetButton"].waitForExistence(timeout: 2)
+        }
+#endif
     }
 
     // MARK: - Automated audit
@@ -197,12 +214,12 @@ final class AccessibilityTests: XCTestCase {
         // 6. Dismiss keyboard, scroll to reveal Reset, then tap it.
         //    Keyboard stays up after typing in step 5 — app.swipeUp() hits the keyboard,
         //    not the content. iPhone (narrow layout, List) and iPad (wide layout,
-        //    ScrollView) need different handling: iPad has no keyboard-dismiss toolbar
-        //    button at all (that's iPhone/List-only — the wide layout's detail column
-        //    only hides the navigation bar toolbar, it never adds a keyboard one), and
-        //    on iPad app.toolbars.buttons picks up the software keyboard's own
-        //    toolbar-like chrome instead of anything of ours, so querying it fails
-        //    outright ("No matches found").
+        //    ScrollView) need different handling. Neither has a keyboard-dismiss toolbar
+        //    button anymore (removed for issue #72 — it threw off the automatic
+        //    scroll-focused-field-into-view math on iPad, hiding lower rows). iPhone's
+        //    List now uses .scrollDismissesKeyboard(.interactively): the same swipeUp
+        //    drag that scrolls the list also progressively dismisses the keyboard, so no
+        //    separate dismiss step is needed there — just swipe.
 #if os(iOS)
         let resetBtn = app.buttons["resetButton"]
         if UIDevice.current.userInterfaceIdiom == .pad {
@@ -217,10 +234,12 @@ final class AccessibilityTests: XCTestCase {
                 scrollAttempts += 1
             }
         } else {
-            app.toolbars.buttons.firstMatch.tap()
+            // Swipe on app directly, not app.tables — see the "List uses app.swipeUp()"
+            // gotcha elsewhere in this file/CLAUDE.md; querying the List as a Table can
+            // fail to match at all depending on OS version.
             var scrollAttempts = 0
             while !resetBtn.isHittable && scrollAttempts < 5 {
-                app.tables.firstMatch.swipeUp()
+                app.swipeUp()
                 scrollAttempts += 1
             }
         }

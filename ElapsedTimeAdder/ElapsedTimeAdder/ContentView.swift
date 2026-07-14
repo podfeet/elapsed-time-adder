@@ -480,10 +480,25 @@ struct ContentView: View {
                 }
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
-                .navigationTitle("Elapsed Time Adder")
+                // Empty, not hidden: a fully-hidden nav bar has no background material, so
+                // once the user scrolls far enough for our custom appTitle row to reach the
+                // top, it slides in under the status bar/Dynamic Island with nothing to
+                // blur it — fully legible and colliding with the system clock. Keeping the
+                // (title-less) bar preserves its automatic scroll-edge material so content
+                // is properly obscured as it passes underneath. appTitle carries an
+                // isHeader trait below so VoiceOver's Headings rotor still finds "Elapsed
+                // Time Adder" the way it would have via a real navigation title.
+                .navigationTitle("")
 #if os(iOS)
+                // An empty title alone wasn't enough — iOS 26 auto-collapses a nav bar with
+                // no title/items to zero height instead of leaving a title-less bar with its
+                // background material intact, so content still scrolled straight under the
+                // status bar with nothing blurring it. Forcing the bar visible (and its
+                // background visible) keeps it present — and its scroll-edge material
+                // active — even though there's nothing displayed in it.
+                .toolbar(.visible, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
                 .environment(\.editMode, $editMode)
-                .toolbar(.hidden, for: .navigationBar)
                 // No custom keyboard-toolbar dismiss button here (see issue #72): it rides
                 // above the keyboard as an input accessory view, and iOS's automatic
                 // scroll-focused-field-into-view logic accounts for the keyboard's height
@@ -558,6 +573,10 @@ struct ContentView: View {
                 .minimumScaleFactor(0.6)
         }
         .frame(maxWidth: .infinity, alignment: .center)
+        // Marks this as the screen's heading for VoiceOver's Headings rotor, since the
+        // iPhone layout's navigationTitle is now empty (see the narrow-layout List's
+        // .navigationTitle("") comment) to preserve the nav bar's scroll-edge material.
+        .accessibilityAddTraits(.isHeader)
     }
 
     private var usageHint: some View {
