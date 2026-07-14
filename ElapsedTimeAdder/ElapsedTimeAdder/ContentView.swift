@@ -266,20 +266,32 @@ struct ContentView: View {
             // columnVisibility binding gives macOS its native sidebar toggle button.
             NavigationSplitView(columnVisibility: $columnVisibility) {
 #if os(iOS)
-                // iPad: About & Feedback pinned to bottom via VStack
-                VStack(spacing: 0) {
+                // iPad: About & Feedback used to be pinned to the bottom via a fixed
+                // (non-scrolling) VStack sibling below the ScrollView. That broke as soon
+                // as the keyboard appeared for a field in the detail column: the sidebar
+                // still gets keyboard-avoidance applied to it even though nothing in it is
+                // focused, which squeezes the fixed content and the ScrollView into
+                // whatever room is left. Ignoring keyboard safe area on the sidebar only
+                // fixed the layout math, not the split-view column's actual clipped frame,
+                // so behavior still diverged by orientation (overlap in landscape, fully
+                // clipped off-screen in portrait). Putting sidebarAboutContent INSIDE the
+                // ScrollView (with a GeometryReader-driven minHeight + Spacer so it still
+                // sits at the bottom when there's spare room) sidesteps all of that: the
+                // whole sidebar is just scrollable content, so a shrinking keyboard makes
+                // it scroll rather than overlap or vanish.
+                GeometryReader { geo in
                     ScrollView {
                         VStack(spacing: 16) {
                             appTitle
                             usageHint
                             sidebarExportButtons
                             spreadsheetButton
+                            Spacer(minLength: 20)
+                            sidebarAboutContent
                         }
                         .padding()
+                        .frame(minHeight: geo.size.height)
                     }
-                    .frame(maxWidth: .infinity)
-                    sidebarAboutContent
-                        .padding()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .toolbar(.hidden, for: .navigationBar)
