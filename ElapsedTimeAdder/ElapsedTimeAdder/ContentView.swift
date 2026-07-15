@@ -10,6 +10,17 @@ import SwiftUI
 import AppKit
 #endif
 
+// Shared by sidebarAboutContent and AboutSheet — reads the marketing version
+// (CFBundleShortVersionString) and the date-based build number (CFBundleVersion,
+// stamped by the Archive pre-action script) straight from the bundle so it's always
+// accurate for whatever's actually installed, never a hardcoded string to keep in sync.
+private func appVersionBuildString() -> String {
+    let info = Bundle.main.infoDictionary
+    let version = info?["CFBundleShortVersionString"] as? String ?? "?"
+    let build = info?["CFBundleVersion"] as? String ?? "?"
+    return "Version \(version) (\(build))"
+}
+
 // Pure decision logic for ContentView.isWide, pulled out to a standalone function
 // so it's unit-testable directly with UserInterfaceSizeClass values — no simulator
 // device rotation required. Automating real rotation via XCUIDevice.shared.orientation
@@ -407,7 +418,15 @@ struct ContentView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 #if os(iOS)
-                .toolbar(.hidden, for: .navigationBar)
+                // iPadOS 26's windowed mode (shrunk from fullscreen) provides its own native
+                // sidebar-toggle button in this bar — a custom one here would just duplicate
+                // it. Title-less, NOT hidden: fully hiding the bar would take that native
+                // button with it. Once the sidebar is collapsed (by that native toggle, or
+                // by iPadOS's own adaptive layout), the detail column is the only thing on
+                // screen, so it shows the app title rather than staying blank — but stays
+                // title-less while the sidebar's visible, since the sidebar already shows it.
+                .navigationTitle(columnVisibility == .all ? "" : "Elapsed Time Adder")
+                .toolbar(.visible, for: .navigationBar)
 #else
                 // Empty title suppresses the "Elapsed Time Adder" window title that macOS
                 // would otherwise show in the toolbar. The sidebar toggle button is kept
@@ -741,6 +760,10 @@ struct ContentView: View {
                 .font(.subheadline)
                 .foregroundStyle(.primary)   // .secondary fails WCAG AA contrast
 
+            Text(appVersionBuildString())
+                .font(.caption)
+                .foregroundStyle(.primary)   // .secondary fails WCAG AA contrast
+
             VStack(spacing: 8) {
                 Link(destination: URL(string: "https://timeadder.podfeet.com")!) {
                     Label("Visit timeadder.podfeet.com", systemImage: "safari")
@@ -862,6 +885,9 @@ private struct AboutSheet: View {
                         .font(isShort ? .headline : .title2.bold())
                     Text("A Podfeet App")
                         .font(.subheadline)
+                        .foregroundStyle(.primary)   // .secondary fails WCAG AA contrast
+                    Text(appVersionBuildString())
+                        .font(.caption)
                         .foregroundStyle(.primary)   // .secondary fails WCAG AA contrast
                 }
                 .padding(.top, isShort ? 10 : 24)
