@@ -276,7 +276,7 @@ struct ContentView: View {
             // WindowGroup doesn't insert its own blank primary column on iPad.
             // columnVisibility binding gives macOS its native sidebar toggle button.
             NavigationSplitView(columnVisibility: $columnVisibility) {
-#if os(iOS)
+#if os(iOS) || os(visionOS)
                 // iPad: About & Feedback used to be pinned to the bottom via a fixed
                 // (non-scrolling) VStack sibling below the ScrollView. That broke as soon
                 // as the keyboard appeared for a field in the detail column: the sidebar

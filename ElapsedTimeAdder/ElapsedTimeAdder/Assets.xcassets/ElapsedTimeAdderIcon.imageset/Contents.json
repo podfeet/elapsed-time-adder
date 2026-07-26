@@ -1,0 +1,23 @@
+{
+  "images" : [
+    {
+      "filename" : "ElapsedTimeAdderIcon.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "ElapsedTimeAdderIcon 1.png",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "filename" : "ElapsedTimeAdderIcon3072png.png",
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
