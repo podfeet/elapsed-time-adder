@@ -6,30 +6,6 @@ Bundle ID: com.podfeet.ElapsedTimeAdder
 
 ![Image on 2026-05-04 07.17.11 PM](app-store-submittal-images/new-app-submit-name-bundleid.png)
 
-## Example shown in screenshots
-
-iPhone 17 Pro Max, iPhone 17e
-
-Total s/b: 1 hr 26 min 39 sec
-
-```Recording 1:23:45 (add) : "Intro/Outro" — 0:05:00 (add) : "Dead air" - 0:02:30 (subtract)
-Recording    1:23:45
-Intro/Outro  0:05:17
-Dead air     0:02:23 (subtract)
-```
-
-iPad only, Landscape, showing "why not use a spreadsheet?"
-
-Total s/b 1 hr 29 min 59 sec
-
-```
-Recording    1:23:45
-Intro	       0:02:09
-Outro        0:03:08
-Dead air     0:02:23 (subtract)
-Promo        0:03:20
-```
-
 ## Text
 
 ### Promotional Text
@@ -98,36 +74,9 @@ To create the subdomain timeadder.podfeet.com:
 
 
 
-## Validate build
-
-error:
-
-Invalid large app icon. The large app icon in the asset catalog in “ElapsedTimeAdder.app” can’t be transparent or contain an alpha channel. For details, visit: https://developer.apple.com/design/human-interface-guidelines/app-icons.
-
-Opened icon in Preview, unchecked alpha. then ran this command to recreate the icon sizes:
-
-
-
-```
-SRC="/Users/allison/htdocs/elapsed-time-adder/assets/ElapsedTimeAdderIcon.png"
-DEST="/Users/allison/htdocs/elapsed-time-adder/ElapsedTimeAdder/ElapsedTimeAdder/Assets.xcassets/AppIcon.appiconset"
-
-sips -z 1024 1024 "$SRC" --out "$DEST/AppIcon-1024.png"
-sips -z 16 16   "$SRC" --out "$DEST/AppIcon-16.png"
-sips -z 32 32   "$SRC" --out "$DEST/AppIcon-16@2x.png"
-sips -z 32 32   "$SRC" --out "$DEST/AppIcon-32.png"
-sips -z 64 64   "$SRC" --out "$DEST/AppIcon-32@2x.png"
-sips -z 128 128 "$SRC" --out "$DEST/AppIcon-128.png"
-sips -z 256 256 "$SRC" --out "$DEST/AppIcon-128@2x.png"
-sips -z 256 256 "$SRC" --out "$DEST/AppIcon-256.png"
-sips -z 512 512 "$SRC" --out "$DEST/AppIcon-256@2x.png"
-sips -z 512 512 "$SRC" --out "$DEST/AppIcon-512.png"
-sips -z 1024 1024 "$SRC" --out "$DEST/AppIcon-512@2x.png"
-```
-
 ### Product → Archive
 
-then opens archives and can run validate
+Opens the archives and can run validate, send to App Store
 
 
 
@@ -150,7 +99,7 @@ then opens archives and can run validate
 3. If it's your first time with a new build, Apple may ask you to fill in an **Export Compliance** question (just answer No to encryption if you're not using any custom encryption)
 4. Once processed, click the build and add it to your test group to make it available to testers
 
-## Better screenshots
+# Screenshots
 
 from Claude code:
 
@@ -166,8 +115,13 @@ from Claude code:
 
 - "Add and subtract times in seconds"
 - "Mix additions and subtractions"
-- "Export to CSV or HH:MM:SS"
-- "Works on iPhone, iPad, and Mac"
+- "Copy as CSV or HH:MM:SS"
+- "Works on iPhone, iPad, Mac and visionOS"
+
+**Final decisions**
+
+- Add & Subtract Complex Times
+- 
 
 ### Size of screenshots
 
@@ -179,7 +133,7 @@ For App Store screenshots, the required pixel dimensions vary by device:
 
 **iPad (required if you support iPad):**
 
-- 13" display: **2064 × 2752** — covers all iPad sizes
+- 13" display:  **2752 x 2064** — covers all iPad sizes 
 
 **Mac (required if you support Mac):**
 
@@ -190,3 +144,61 @@ So iPhone and iPad are both portrait (tall), Mac is landscape (wide). You'll nee
 ### Number of screenshots
 
 You can upload up to **10 screenshots per device size**. Apple just requires a minimum of 1. More is generally better since each one is a chance to highlight a different feature before someone decides whether to download.
+
+### Process to take screenshots
+
+1. **Boot the right simulator** — iPhone 17 Pro Max (this falls in Apple's "6.9-inch display" class, so it renders at the exact 1320 × 2868 required).
+2. **Get the app into the state you want** (data entered, +/− mix, whatever scene from your list) in the Simulator window.
+3. **File → Save Screen** in the Simulator app menu bar (or press **⌘S**). This is the key step — it saves the screenshot at the simulator's **true device pixel resolution**, not the scaled size of the window on your monitor. Screenshotting the window itself (e.g. with macOS's own ⌘⇧4) would capture the wrong resolution.
+4. The PNG lands on your **Desktop** by default, named something like `Simulator Screenshot - iPhone 17 Pro Max - <date> at <time>.png` (matches the filenames already deleted from your `assets/app-store-submittal-images/` folder — that's clearly your prior workflow).
+   1. Hazel rule moves screenshot to '/Users/allison/htdocs/elapsed-time-adder/assets/app-store-submittal-images/Working image files copy/01 Unframed'
+5. Repeat for the iPad Pro 13" simulator and for iPhone 17e, one screenshot per scene.
+6. For Mac, since there's no simulator, you'd run the actual app and use ⌘⇧4 (or ⌘⇧5) to capture the app window itself at native resolution, then crop/scale into the 16:10 landscape range.
+
+## Example shown in screenshots
+
+iPhone 17 Pro Max, iPhone 17e
+
+Total s/b: 1 hr 26 min 39 sec
+
+```Recording 1:23:45 (add) : "Intro/Outro" — 0:05:00 (add) : "Dead air" - 0:02:30 (subtract)
+Recording    1:23:45
+Intro/Outro  0:05:17
+Dead air     0:02:23 (subtract)
+```
+
+iPad only, Landscape, showing "why not use a spreadsheet?"
+
+Total s/b 1 hr 29 min 59 sec
+
+```
+Recording    1:23:45
+Intro	       0:02:09
+Outro        0:03:08
+Dead air     0:02:23 (subtract)
+Promo        0:03:20
+```
+
+## Process
+
+1. Take screenshot
+2. Save in `01 Unframed`
+3. Frame screenshot with Shareshot
+4. Save in `02 Framed`
+5. Import to Affinity in appropriate document
+6. Size on import
+   1. iPhone Pro Max: 1998x3408 pixels @ 250dpi (86%)
+7. Decide on words
+8. Export to `03 Framed gradient titled`size 1320x2868
+
+## Completed iPhone 17 Pro screenshots
+
+1. Image down: Add & Subtract Complex Times
+2. Image up: Copy CSV
+3. Image down: Edit Rows
+4. Image up: Get Help
+
+## Completed 13" iPad screenshots
+
+5. iPad 13" 10 rows
+6. iPad 13" absurd times
