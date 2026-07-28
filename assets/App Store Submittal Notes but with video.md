@@ -138,14 +138,14 @@ For App Store screenshots, the required pixel dimensions vary by device:
 **Mac (required if you support Mac):**
 
 - Minimum **1280 × 800**, but can be up to **2560 × 1600** — aspect ratio is landscape **16:10**
+- Resource: https://www.lazyscreenshots.com/blog/app-store-screenshots-mac/
 
-So iPhone and iPad are both portrait (tall), Mac is landscape (wide). You'll need different compositions for Mac vs iPhone/iPad since the orientation flips.
+So iPhone is both portrait (tall),  iPad and Mac are landscape (wide). 
 
 ### Number of screenshots
 
 You can upload up to **10 screenshots per device size**. Apple just requires a minimum of 1. More is generally better since each one is a chance to highlight a different feature before someone decides whether to download.
 
-<<<<<<< Updated upstream
 ### Process to take screenshots
 
 1. **Boot the right simulator** — iPhone 17 Pro Max (this falls in Apple's "6.9-inch display" class, so it renders at the exact 1320 × 2868 required).
@@ -190,7 +190,7 @@ Promo        0:03:20
 6. Size on import
    1. iPhone Pro Max: 1998x3408 pixels @ 250dpi (86%)
 7. Decide on words
-8. Export to `03 Framed gradient titled`size 1320x2868
+8. Export to `03 Framed gradient titled` size 1320x2868
 
 ## Completed iPhone 17 Pro screenshots
 
@@ -203,7 +203,8 @@ Promo        0:03:20
 
 5. iPad 13" 10 rows
 6. iPad 13" absurd times
-=======
+7. iPad 13" dark mode
+
 ## Video screenshot
 
 At least one:
