@@ -99,23 +99,5 @@
    <ArchiveAction
       buildConfiguration = "Release"
       revealArchiveInOrganizer = "YES">
-      <PreActions>
-         <ExecutionAction
-            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
-            <ActionContent
-               title = "Run Script"
-               scriptText = "BUILD_NUMBER=$(date +&quot;%y%m%d%H%M&quot;)&#10;cd &quot;${SRCROOT}&quot; || exit 1&#10;sed -i &apos;&apos; &quot;s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = ${BUILD_NUMBER};/g&quot; ElapsedTimeAdder.xcodeproj/project.pbxproj&#10;">
-               <EnvironmentBuildable>
-                  <BuildableReference
-                     BuildableIdentifier = "primary"
-                     BlueprintIdentifier = "37D9E93D2F9FD9D800A68EC9"
-                     BuildableName = "ElapsedTimeAdder.app"
-                     BlueprintName = "ElapsedTimeAdder"
-                     ReferencedContainer = "container:ElapsedTimeAdder.xcodeproj">
-                  </BuildableReference>
-               </EnvironmentBuildable>
-            </ActionContent>
-         </ExecutionAction>
-      </PreActions>
    </ArchiveAction>
 </Scheme>
