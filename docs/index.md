@@ -18,7 +18,7 @@ If you have any questions, comments, or suggestions for Elapsed Time Adder, plea
 
 ## What Problem Does Time Adder Solve?
 
-Elapsed Time Adder runs on iOS, iPadOS, and macOS to help you add and subtract elapsed time. 
+Elapsed Time Adder runs on iOS, iPadOS, macOS (and visionOS) to help you add and subtract elapsed time. 
 
 You might ask why not just use a spreadsheet for this? Sadly, while spreadsheets are great at doing calculations, they assume time is time-of-day. Because of that, they can't calculate elapsed time. Try adding 22:00 + 5:00 in a spreadsheet, and you'll get 3:00 AM, not 27:00.
 
@@ -28,12 +28,12 @@ If you need to add split times for running or walking, or keep track of time seg
 
 Enter the times in each row, along with an optional title for each row, and watch the total update automatically in plain language (e.g., "1 hr 23 min 45 sec").
 
-Elapsed Time Adder easily handles numbers like 384.6 seconds, or 74 minutes.. If you want to subtract a row, simply hit the +/- toggle, and you'll see the row turn from green to pink, and that row's value will be subtracted from the total.
+Elapsed Time Adder easily handles numbers like 384.6 seconds, or 74 minutes. If you want to subtract a row, simply hit the +/- toggle, and you'll see the row turn from green to pink, and that row's value will be subtracted from the total.
 
 Use the "Add Another Row" button to have more rows included in your calculations. If you're on a Mac or an iPad with a keyboard, hitting Tab at the end of the last second value will add a new row too.
 
 Want to start over? Tap on "Reset", and you'll be back to the default number of rows, and they'll all be empty. Use the "Edit Rows" button to delete rows, or rearrange them with the hamburger handles.
 
-When you're finished, you can export your data to a CSV suitable for opening in a spreadsheet application, or you can export to HH:MM:SS format along with the titles for each row. This will take you to the share sheet to send your output where you desire.
+When you're finished, you can copy your data to a CSV suitable for opening in a spreadsheet application, or you can copy to HH:MM:SS format along with the titles for each row.
 
 Note that nothing is stored in a back-end system or in the cloud; all of your data is kept on-device only.  Read more in the [Privacy Policy](./assets/pages/privacy-policy.html).
