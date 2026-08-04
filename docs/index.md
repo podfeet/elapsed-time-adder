@@ -11,7 +11,7 @@ It was created by Allison Sheridan, the host of the [Podfeet Podcasts](https://w
 
 ## Free Download
 
-When Elapsed Time Adder becomes available, you can download it from the [App Store](https://apps.apple.com/app/XXXXXXX).
+Elapsed Time Adder is available on the Mac from the [Mac App Store](https://apps.apple.com/us/app/elapsed-time-adder/id6766396058?mt=12) and for iOS soon!
 
 ## Support
 If you have any questions, comments, or suggestions for Elapsed Time Adder, please don't hesitate to reach out. If you're of the nerd persuasion, you can open an issue on the [GitHub repository](https://github.com/podfeet/elapsed-time-adder) or feel free to email me directly at [allison@podfeet.com](mailto:allison@podfeet.com).
