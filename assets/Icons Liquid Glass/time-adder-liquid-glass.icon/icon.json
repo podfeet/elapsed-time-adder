@@ -1,0 +1,132 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "extended-srgb:0.00000,0.53333,1.00000,1.00000",
+      "display-p3:0.20503,0.47765,0.89500,1.00000"
+    ],
+    "orientation" : {
+      "start" : {
+        "x" : 0.5,
+        "y" : 0
+      },
+      "stop" : {
+        "x" : 0.5,
+        "y" : 0.7
+      }
+    }
+  },
+  "groups" : [
+    {
+      "blur-material" : 0.5,
+      "layers" : [
+        {
+          "blend-mode" : "normal",
+          "glass" : true,
+          "hidden" : false,
+          "image-name" : "circle-sweep-flat.png",
+          "name" : "circle-sweep-flat",
+          "opacity" : 1,
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              -8.4296875
+            ]
+          }
+        },
+        {
+          "glass" : true,
+          "image-name" : "pushpin-flat.png",
+          "name" : "pushpin-flat",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              -14.5703125
+            ]
+          }
+        }
+      ],
+      "lighting" : "individual",
+      "name" : "Stopwatch",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 1
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    },
+    {
+      "blur-material" : 0.5,
+      "layers" : [
+        {
+          "image-name" : "plus-minus-flat.png",
+          "name" : "plus-minus-flat",
+          "opacity" : 1,
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -7,
+              6.5
+            ]
+          }
+        }
+      ],
+      "lighting" : "individual",
+      "name" : "plus minus",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 1
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    },
+    {
+      "layers" : [
+        {
+          "fill" : {
+            "linear-gradient" : [
+              "display-p3:0.38403,0.64839,1.04685,1.00000",
+              "extended-srgb:0.00000,0.53333,1.00000,1.00000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.0312652587890625,
+                "y" : 0.5
+              },
+              "stop" : {
+                "x" : 0.9645843505859375,
+                "y" : 0.5
+              }
+            }
+          },
+          "glass" : true,
+          "image-name" : "background-flat 2.png",
+          "name" : "background-flat 2",
+          "opacity" : 1
+        }
+      ],
+      "name" : "background",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
