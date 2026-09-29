@@ -453,7 +453,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				"EXECUTABLE_NAME[sdk=macosx*]" = "Elapsed Time Adder";
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Time Adder";
+				INFOPLIST_KEY_CFBundleDisplayName = "Elapsed Time Adder";
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=macosx*]" = "Elapsed Time Adder";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -503,7 +503,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				"EXECUTABLE_NAME[sdk=macosx*]" = "Elapsed Time Adder";
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Time Adder";
+				INFOPLIST_KEY_CFBundleDisplayName = "Elapsed Time Adder";
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=macosx*]" = "Elapsed Time Adder";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
